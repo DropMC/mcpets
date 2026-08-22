@@ -47,8 +47,9 @@
         </resources>
     </build>
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <survival.core.version>5b39c4b</survival.core.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <repositories>
@@ -99,6 +100,18 @@
             <id>matteodev</id>
             <url>https://maven.devs.beer/</url>
         </repository>
+        <repository>
+            <id>panda-repo</id>
+            <url>https://repo.panda-lang.org/releases/</url>
+        </repository>
+        <repository>
+            <id>okaeri-repo</id>
+            <url>https://storehouse.okaeri.eu/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>triumph-repo</id>
+            <url>https://repo.triumphteam.dev/releases/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -125,7 +138,47 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21-R0.1-SNAPSHOT</version>
+            <version>1.21.11-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- DropMC dependencies -->
+        <!--
+            SurvivalCore is built by the DropMC/root monorepo, which publishes no artifact, so the
+            thin jar is vendored under libs/. Re-copy it from core/build/libs/core-<hash>.jar and
+            bump survival.core.version whenever core's API changes. System scope keeps it off the
+            output jar; the server provides the real classes through the SurvivalCore plugin.
+            Maven 4 drops system scope, so this moves to a published artifact if we ever upgrade.
+        -->
+        <dependency>
+            <groupId>gg.dropmc.survival</groupId>
+            <artifactId>core</artifactId>
+            <version>${survival.core.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/survival-core.jar</systemPath>
+        </dependency>
+        <!--
+            SurvivalCore's shadow jar bundles these unrelocated and exposes them in its own
+            signatures, so they are compile-time only here: LiteCommands for CommandFactory,
+            OkaeriConfigs for BasePlugin#config/#messages, Triumph GUI for AbstractMenu.
+            Versions are pinned to buildSrc/src/main/kotlin/Dependencies.kt in the monorepo.
+        -->
+        <dependency>
+            <groupId>dev.rollczi</groupId>
+            <artifactId>litecommands-bukkit</artifactId>
+            <version>3.10.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>eu.okaeri</groupId>
+            <artifactId>okaeri-configs-yaml-bukkit</artifactId>
+            <version>6.1.0-beta.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.triumphteam</groupId>
+            <artifactId>triumph-gui</artifactId>
+            <version>3.1.12</version>
             <scope>provided</scope>
         </dependency>
 

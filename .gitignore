@@ -114,3 +114,7 @@ fabric.properties
 
 /META-INF/*.MF
 /src/main/resources/META-INF/*.MF
+
+# Vendored SurvivalCore jar: compiled from the DropMC/root monorepo and needed at
+# compile time. The server provides the real classes at runtime via SurvivalCore.
+!libs/*.jar

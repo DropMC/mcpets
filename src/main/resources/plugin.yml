@@ -10,6 +10,7 @@ api-version: 1.21
 database: false
 prefix: '${project.name}'
 depend:
+  - SurvivalCore
   - MythicMobs
 softdepend:
   - ModelEngine
