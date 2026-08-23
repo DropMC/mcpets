@@ -61,8 +61,10 @@ public class PetConfig extends AbstractConfig {
             getConfig().set("Id", fileName.replace(".yml", ""));
         if (getConfig().get("MythicMob") == null)
             getConfig().set("MythicMob", "No MythicMob defined");
+        // Defaulting to the command node would hand the pet to every player who can run /pet, so a
+        // pet that does not name its own node gets one derived from its id instead.
         if (getConfig().get("Permission") == null)
-            getConfig().set("Permission", PPermission.USE.getPermission());
+            getConfig().set("Permission", PPermission.PET_NODE_PREFIX + getConfig().getString("Id"));
         if (getConfig().get("Distance") == null)
             getConfig().set("Distance", 6);
         if (getConfig().get("SpawnRange") == null)

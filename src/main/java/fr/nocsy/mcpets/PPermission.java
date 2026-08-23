@@ -8,8 +8,8 @@ import lombok.Getter;
  * The permission nodes, in the house format. Annotations need them as compile-time constants, so
  * the nodes are declared as constants and the enum values only wrap them.
  *
- * <p>The node that grants ownership of one pet is not here: it comes from the {@code Permission:}
- * key of each pet's own yml, so it is configuration rather than code.</p>
+ * <p>The node that grants ownership of one pet is the {@code Permission:} key of that pet's own
+ * yml; only the prefix used to default it lives here.</p>
  */
 public enum PPermission {
 
@@ -29,6 +29,9 @@ public enum PPermission {
     public static final String RIDE_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.montar";
     public static final String DISMISS_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.guardar";
     public static final String COLOR_NODE = Brand.PERMISSION_PREFIX + ".pet.color";
+
+    /** Prefix of the node that grants ownership of one pet: this plus the pet's id. */
+    public static final String PET_NODE_PREFIX = Brand.PERMISSION_PREFIX + ".pet.";
 
     // One node per staff verb, so the generated help lists only what the reader can actually run.
     public static final String ADMIN_RELOAD_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.admin.reload";
