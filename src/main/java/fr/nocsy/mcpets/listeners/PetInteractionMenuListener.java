@@ -25,6 +25,7 @@ import fr.nocsy.mcpets.data.Items;
 import fr.nocsy.mcpets.PPermission;
 import fr.nocsy.mcpets.utils.Utils;
 import fr.nocsy.mcpets.utils.PDCTag;
+import fr.nocsy.mcpets.utils.PetAttackCooldown;
 import fr.nocsy.mcpets.data.PetSkin;
 import fr.nocsy.mcpets.data.config.Language;
 import fr.nocsy.mcpets.data.PetDespawnReason;
@@ -75,6 +76,9 @@ public class PetInteractionMenuListener implements Listener {
         pet.despawn(PetDespawnReason.REVOKE);
         Language.REVOKED.sendMessage(p);
         p.playSound(p.getLocation(), STORE_SOUND, 0.7F, 0.8F);
+        // The cooldown itself keeps running on the owner, but counting it down on screen is noise once
+        // there is no pet out to give the order to.
+        PetAttackCooldown.clear(p.getUniqueId());
     }
 
     @EventHandler

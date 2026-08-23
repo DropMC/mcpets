@@ -48,6 +48,8 @@ public enum Language {
     PET_TAMING_PROGRESS(MessageType.INFO, "<gray>Domesticando: <green>%progress%%</green> %progressbar%"),
     SIGNAL_STICK_SIGNAL(MessageType.INFO, "<gray>Ordem ativa: <white>%signal%"),
     NO_ATTACK_HERE(MessageType.ERROR, "Seu pet não pode atacar aqui."),
+    ATTACK_ON_COOLDOWN(MessageType.ERROR, "Seu pet ainda está se recarregando. <gray>(%time%s)"),
+    ATTACK_READY(MessageType.SUCCESS, "Seu pet está pronto para atacar de novo."),
     KEY_LIST(MessageType.INFO, "<gray>Chaves disponíveis:"),
     TAG_TO_REMOVE_NAME(MessageType.INFO, "Nenhum"),
     PET_STATS(MessageType.INFO, "<gray>Vida: <white>%health%<gray>/<white>%maxhealth% <red>❤ <dark_gray>· <gray>Regeneração: <white>%regeneration%<gray>/s\n<gray>Dano: <white>%damagemodifier%% <dark_gray>· <gray>Resistência: <white>%resistancemodifier%% <dark_gray>· <gray>Poder: <white>%power%%\n \n<gray>Nível: <white>%levelname%\n%progressbar% <gray>(<white>%experience%<gray>/<white>%threshold%<gray>)"),

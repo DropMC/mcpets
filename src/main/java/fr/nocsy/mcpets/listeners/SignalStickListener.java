@@ -16,6 +16,7 @@ import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.PlayerSignal;
 import fr.nocsy.mcpets.data.config.FormatArg;
 import fr.nocsy.mcpets.data.config.Language;
+import fr.nocsy.mcpets.utils.PetAttackCooldown;
 import fr.nocsy.mcpets.utils.PetProtection;
 
 /**
@@ -79,7 +80,16 @@ public class SignalStickListener implements Listener {
             return true;
         }
 
+        // MythicMobs owns the cooldown, and its own conditions decide whether this order runs. The plugin
+        // only reports it: the wait in chat when an order lands on a recharging pet, and the countdown on
+        // the action bar either way.
+        final int wait = PetAttackCooldown.remainingSeconds(p);
+        if (wait > 0) {
+            Language.ATTACK_ON_COOLDOWN.sendMessageFormatted(p, new FormatArg("%time%", Integer.toString(wait)));
+        }
+
         pet.sendSignal(PlayerSignal.getSignalTag(p.getUniqueId()));
+        PetAttackCooldown.watch(p);
         return true;
     }
 

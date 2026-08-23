@@ -20,6 +20,8 @@ public class GlobalConfig extends AbstractConfig {
     @Getter
     private String defaultName;
     @Getter
+    private String attackCooldownAura;
+    @Getter
     private boolean overrideDefaultName;
     @Getter
     private int adaptiveInventory;
@@ -159,6 +161,8 @@ public class GlobalConfig extends AbstractConfig {
             getConfig().set("DefaultName", DEFAULT_NAME);
         if (getConfig().get("OverrideDefaultName") == null)
             getConfig().set("OverrideDefaultName", true);
+        if (getConfig().get("AttackCooldownAura") == null)
+            getConfig().set("AttackCooldownAura", "CubeeAttackCooldown");
         if (getConfig().get("EnableClickBackToMenu") == null)
             getConfig().set("EnableClickBackToMenu", true);
         if (getConfig().get("UseDefaultMythicMobsNames") == null)
@@ -286,6 +290,7 @@ public class GlobalConfig extends AbstractConfig {
 
         defaultName = getConfig().getString("DefaultName");
         overrideDefaultName = getConfig().getBoolean("OverrideDefaultName");
+        attackCooldownAura = getConfig().getString("AttackCooldownAura", "CubeeAttackCooldown");
         useDefaultMythicMobNames = getConfig().getBoolean("UseDefaultMythicMobsNames");
         rightClickToOpen = getConfig().getBoolean("RightClickToOpenMenu");
         leftClickToOpen = getConfig().getBoolean("LeftClickToOpenMenu");
