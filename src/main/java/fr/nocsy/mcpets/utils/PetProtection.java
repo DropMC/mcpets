@@ -5,6 +5,7 @@ import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
 
 import org.bukkit.entity.Entity;
@@ -45,8 +46,9 @@ public final class PetProtection {
      * particles and stuns behind, and at spawn none of that should happen either.
      *
      * <p>The question is asked as {@code damage-animals}, which is the flag that already stops the player
-     * from hitting anything at spawn. Region membership decides it, so a staff member's region bypass does
-     * not carry over to their pet.</p>
+     * from hitting anything at spawn. Only an explicit {@code deny} refuses: the flag is unset in the
+     * survival world, and an unset flag reads back as no value at all, which {@code testState} would
+     * report as "not allowed" and turn every world into a sanctuary.</p>
      *
      * @param player the pet's owner, giving the order
      */
@@ -55,7 +57,8 @@ public final class PetProtection {
 
         final RegionQuery query = WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery();
         final LocalPlayer local = WorldGuardPlugin.inst().wrapPlayer(player);
+        final State state = query.queryState(BukkitAdapter.adapt(player.getLocation()), local, Flags.DAMAGE_ANIMALS);
 
-        return query.testState(BukkitAdapter.adapt(player.getLocation()), local, Flags.DAMAGE_ANIMALS);
+        return state != State.DENY;
     }
 }
