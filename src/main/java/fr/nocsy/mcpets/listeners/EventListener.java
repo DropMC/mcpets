@@ -1,6 +1,5 @@
 package fr.nocsy.mcpets.listeners;
 
-import fr.nocsy.mcpets.data.config.GlobalConfig;
 import fr.nocsy.mcpets.listeners.editor.EditorConversationListener;
 import fr.nocsy.mcpets.listeners.editor.EditorGlobalListener;
 import fr.nocsy.mcpets.mythicmobs.MythicListener;
@@ -28,6 +27,7 @@ public class EventListener implements Listener {
         listeners.add(new MountWallClipListener());
 
         listeners.add(new LivingPetsListener());
+        listeners.add(new PetPveListener());
 
         listeners.add(new MythicListener());
 
@@ -38,10 +38,6 @@ public class EventListener implements Listener {
 
         for (Listener l : listeners) {
             plugin.getServer().getPluginManager().registerEvents(l, plugin);
-        }
-
-        if (GlobalConfig.getInstance().isWorldGuardSupport()) {
-            listeners.add(new PetDamageFlagListener());
         }
     }
 

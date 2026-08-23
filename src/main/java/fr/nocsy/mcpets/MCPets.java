@@ -169,12 +169,37 @@ public class MCPets extends JavaPlugin {
                     .registerCustomComponent(CustomComponentRegistry.MythicComponentType.TARGETER, TARGETER_PACKAGE)
                     .registerCustomComponent(CustomComponentRegistry.MythicComponentType.MECHANIC, MECHANIC_PACKAGE);
 
+            reparseMythicSkills();
+
             getLog().info("-=-=-=-= MCPets loaded =-=-=-=-");
             getLog().info("      Plugin made by Nocsy     ");
             getLog().info("-=-=-=-= -=-=-=-=-=-=- =-=-=-=-");
 
             FlagsManager.launchFlags();
         });
+    }
+
+    /**
+     * Makes MythicMobs re-read its packs so the components registered just above actually take effect.
+     * <p>
+     * MythicMobs compiles every skill expression while it enables, which is before this plugin enables because
+     * MCPets depends on it. A placeholder it does not know at that point stays in the expression as literal text, so
+     * a skill line like {@code cooldown=(30-(<pet.power>*0.2))} reaches the math parser with the tag intact, the
+     * whole expression fails, and the skill ends up with no cooldown at all.
+     * <p>
+     * A full reload is what it takes, and it is deliberately blunt. Registering from onLoad is rejected by Bukkit,
+     * because {@code CustomComponentRegistry} subscribes to events in its constructor. Reloading only the
+     * configuration, or only the skills, was measured and leaves {@code &lt;pet.power&gt;} unresolved: the components
+     * this plugin registers while enabling only take hold once MythicMobs reloads and fires the event that makes it
+     * register them again. This is the same /mm reload an admin had to run by hand after every restart.
+     */
+    private void reparseMythicSkills() {
+        try {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mm reload");
+        } catch (final Exception ex) {
+            getLog().log(Level.SEVERE, "MythicMobs could not be reloaded, so pet placeholders such as "
+                    + "<pet.power> will not resolve until /mm reload is run by hand", ex);
+        }
     }
 
     @Override
