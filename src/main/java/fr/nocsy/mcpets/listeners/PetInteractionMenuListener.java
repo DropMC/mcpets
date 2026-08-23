@@ -9,6 +9,7 @@ import lombok.Getter;
 
 import org.jetbrains.annotations.NotNull;
 
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
@@ -33,6 +34,9 @@ import fr.nocsy.mcpets.data.inventories.PetInventory;
 import fr.nocsy.mcpets.data.inventories.PetInventoryHolder;
 
 public class PetInteractionMenuListener implements Listener {
+
+    /** Answers the pets menu summon sound a fifth lower, so calling and storing read as one pair. */
+    private static final Sound STORE_SOUND = Sound.ENTITY_ENDERMAN_TELEPORT;
 
     @Getter
     private static final List<UUID> waitingForAnswer = new CopyOnWriteArrayList<>();
@@ -70,6 +74,7 @@ public class PetInteractionMenuListener implements Listener {
     public static void revoke(final Player p, @NotNull final Pet pet) {
         pet.despawn(PetDespawnReason.REVOKE);
         Language.REVOKED.sendMessage(p);
+        p.playSound(p.getLocation(), STORE_SOUND, 0.7F, 0.8F);
     }
 
     @EventHandler

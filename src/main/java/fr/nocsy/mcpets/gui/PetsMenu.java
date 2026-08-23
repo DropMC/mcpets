@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -42,6 +43,9 @@ import fr.nocsy.mcpets.data.sql.PlayerData;
  * opened for {@code player}. Summoning is only wired up when the two are the same.</p>
  */
 public class PetsMenu extends PaginatedMenu<PetsMenu.Entry> {
+
+    /** Played when a click actually puts a pet in the world. Storing one answers it a fifth lower, from PetInteractionMenuListener#revoke. */
+    private static final Sound SUMMON_SOUND = Sound.ENTITY_ENDERMAN_TELEPORT;
 
     private static final PageLayout LAYOUT = PageLayout.of(6, "9-44")
             .previous("45,46")
@@ -115,7 +119,14 @@ public class PetsMenu extends PaginatedMenu<PetsMenu.Entry> {
 
         return builder.onClick(clicker -> {
             clicker.closeInventory();
-            pet.copy().spawnWithMessage(clicker);
+
+            final Pet summoned = pet.copy();
+            summoned.spawnWithMessage(clicker);
+            // Only cheer when the pet actually made it out: spawnWithMessage swallows a cooldown, a
+            // blacklisted world or the active pet cap into a message and leaves nothing summoned.
+            if (summoned.isStillHere()) {
+                clicker.playSound(clicker.getLocation(), SUMMON_SOUND, 0.7F, 1.2F);
+            }
         });
     }
 
