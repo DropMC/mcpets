@@ -12,7 +12,7 @@ import fr.nocsy.mcpets.PPermission;
 import fr.nocsy.mcpets.data.CategoryType;
 import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.inventories.CategoriesMenu;
-import fr.nocsy.mcpets.data.inventories.PetActionMenu;
+import fr.nocsy.mcpets.data.inventories.MountInteractionMenu;
 
 import org.bukkit.entity.Player;
 
@@ -34,6 +34,6 @@ public class MountCommand {
             return;
         }
 
-        PetActionMenu.open(player, active, true);
+        new MountInteractionMenu(active, player.getUniqueId()).open(player);
     }
 }

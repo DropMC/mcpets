@@ -20,7 +20,7 @@ import fr.nocsy.mcpets.data.config.FormatArg;
 import fr.nocsy.mcpets.data.config.GlobalConfig;
 import fr.nocsy.mcpets.data.config.ItemsListConfig;
 import fr.nocsy.mcpets.data.config.Language;
-import fr.nocsy.mcpets.data.inventories.PetActionMenu;
+import fr.nocsy.mcpets.gui.PetActionMenu;
 import fr.nocsy.mcpets.data.inventories.PetInventory;
 import fr.nocsy.mcpets.data.livingpets.PetFood;
 import fr.nocsy.mcpets.data.livingpets.PetStats;
@@ -54,7 +54,7 @@ public class PetCommand {
             return;
         }
 
-        PetActionMenu.open(player, active, false);
+        PetActionMenu.openFor(player, active);
     }
 
     @Execute(name = "nome")
@@ -258,26 +258,6 @@ public class PetCommand {
             target.getInventory().addItem(stack);
             left -= stack.getAmount();
         }
-    }
-
-    @Execute(name = "stick set")
-    @Permission(PPermission.ADMIN_STICK_NODE)
-    @Description("Transforma o item na sua mão em bastão de sinal.")
-    public void stickSet(final @Context Player staff, final @Arg("pet") Pet pet) {
-        final ItemStack held = staff.getInventory().getItemInMainHand();
-        if (held.getType().isAir()) {
-            Language.REQUIRES_ITEM_IN_HAND.sendMessage(staff);
-            return;
-        }
-
-        staff.getInventory().setItemInMainHand(Items.turnIntoSignalStick(held, pet));
-    }
-
-    @Execute(name = "stick give")
-    @Permission(PPermission.ADMIN_STICK_NODE)
-    @Description("Dá o bastão de sinal de um pet a um jogador.")
-    public void stickGive(final @Arg("jogador") Player target, final @Arg("pet") Pet pet) {
-        target.getInventory().addItem(pet.getSignalStick());
     }
 
     @Execute(name = "item list")

@@ -40,8 +40,8 @@ import fr.nocsy.mcpets.data.flags.DismountPetFlag;
 import fr.nocsy.mcpets.data.inventories.PetInventory;
 import fr.nocsy.mcpets.velocity.VelocitySyncManager;
 import fr.nocsy.mcpets.events.PetOwnerInteractEvent;
-import fr.nocsy.mcpets.data.inventories.PetInteractionMenu;
 import fr.nocsy.mcpets.data.inventories.MountInteractionMenu;
+import fr.nocsy.mcpets.gui.PetActionMenu;
 
 import io.lumine.mythic.bukkit.events.MythicMobDeathEvent;
 import io.lumine.mythic.bukkit.events.MythicMobDespawnEvent;
@@ -79,28 +79,10 @@ public class PetListener implements Listener {
             Utils.callEvent(event);
             if (event.isCancelled()) return;
 
-            // Check if this is a mount and open the appropriate menu
-            if (pet.isMount()) {
-                MountInteractionMenu menu = new MountInteractionMenu(pet, p.getUniqueId());
-                pet.setLastInteractedWith(p);
-                menu.open(p);
-            } else {
-                PetInteractionMenu menu = new PetInteractionMenu(pet, p.getUniqueId());
-                pet.setLastInteractedWith(p);
-                menu.open(p);
-            }
+            openActions(p, pet, false);
         }
         if (pet != null && p.isOp()) {
-            // Check if this is a mount and open the appropriate menu
-            if (pet.isMount()) {
-                MountInteractionMenu menu = new MountInteractionMenu(pet, pet.getOwner());
-                pet.setLastOpInteracted(p);
-                menu.open(p);
-            } else {
-                PetInteractionMenu menu = new PetInteractionMenu(pet, pet.getOwner());
-                pet.setLastOpInteracted(p);
-                menu.open(p);
-            }
+            openActions(p, pet, true);
         }
     }
 
@@ -117,32 +99,36 @@ public class PetListener implements Listener {
         Pet pet = Pet.getFromEntity(ent);
 
         if (pet != null && pet.getOwner() != null && pet.getOwner().equals(p.getUniqueId())) {
-            if (pet.isMount()) {
-                MountInteractionMenu menu = new MountInteractionMenu(pet, p.getUniqueId());
-                pet.setLastInteractedWith(p);
-                menu.open(p);
-            } else {
-                PetInteractionMenu menu = new PetInteractionMenu(pet, p.getUniqueId());
-                pet.setLastInteractedWith(p);
-                menu.open(p);
-            }
+            openActions(p, pet, false);
             e.setCancelled(true);
             e.setDamage(0);
         }
         if (pet != null && p.isOp()) {
-            // Check if this is a mount and open the appropriate menu
-            if (pet.isMount()) {
-                MountInteractionMenu menu = new MountInteractionMenu(pet, pet.getOwner());
-                pet.setLastOpInteracted(p);
-                menu.open(p);
-            } else {
-                PetInteractionMenu menu = new PetInteractionMenu(pet, pet.getOwner());
-                pet.setLastOpInteracted(p);
-                menu.open(p);
-            }
+            openActions(p, pet, true);
             e.setCancelled(true);
             e.setDamage(0);
         }
+    }
+
+    /**
+     * Opens the pet's actions for whoever clicked it. A mount still has its own menu; every other pet
+     * gets the two-row one. The pet has to remember the click either way, because the rename prompt
+     * and the menu buttons read the pet back from it.
+     *
+     * @param p     the player who clicked
+     * @param pet   the pet that was clicked
+     * @param asOp  whether the player is inspecting someone else's pet as an operator
+     */
+    private void openActions(final Player p, final Pet pet, final boolean asOp) {
+        if (asOp) pet.setLastOpInteracted(p);
+        else pet.setLastInteractedWith(p);
+
+        if (pet.isMount()) {
+            new MountInteractionMenu(pet, asOp ? pet.getOwner() : p.getUniqueId()).open(p);
+            return;
+        }
+
+        PetActionMenu.openFor(p, pet);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

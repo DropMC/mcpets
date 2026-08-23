@@ -353,26 +353,13 @@ public enum Items {
         return it;
     }
 
-    public static boolean isSignalStick(ItemStack it) {
-        if (it == null || !it.hasItemMeta()) return false;
-
-        final String tag = PDCTag.get(it.getItemMeta());
-        return tag != null && tag.contains(Pet.SIGNAL_STICK_TAG);
-    }
-
-    public static ItemStack turnIntoSignalStick(ItemStack it, Pet pet) {
-        if (it == null || it.getType().isAir() || pet == null) return it;
-
-        ItemMeta meta = it.getItemMeta();
-        PDCTag.set(meta, buildSignalStickTag(pet));
-        it.setItemMeta(meta);
-        return it;
-    }
-
-    public static String buildSignalStickTag(Pet pet) {
-        if (pet == null) return null;
-
-        return Pet.SIGNAL_STICK_TAG + ";" + pet.getId();
+    /**
+     * Whether the item commands a pet. Any stick does: the plugin used to hand out one tagged item per
+     * pet, which turned losing it into losing control of the pet and needed a wall of anti-drop and
+     * anti-craft guards to stay unique.
+     */
+    public static boolean isSignalStick(final ItemStack it) {
+        return it != null && it.getType() == Material.STICK;
     }
 
     public static String getPetTag(ItemStack it) {

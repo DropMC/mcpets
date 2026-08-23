@@ -159,10 +159,6 @@ public class PetConfig extends AbstractConfig {
             inventorySize++;
 
         final List<String> signals = getConfig().getStringList("Signals.Values");
-        boolean enableSignalStickFromMenu = true;
-        if (getConfig().get("Signals.Item.GetFromMenu") != null)
-            enableSignalStickFromMenu = getConfig().getBoolean("Signals.Item.GetFromMenu");
-
         if (id == null) {
             // Warning case on which something essential would be missing
             MCPets.getLog().warning("This pet could not be registered. Please check the configuration file to make sure you didn't miss anything.");
@@ -197,7 +193,6 @@ public class PetConfig extends AbstractConfig {
         pet.setMountType(mountType);
         pet.setDefaultInventorySize(inventorySize);
         pet.setSignals(signals);
-        pet.setEnableSignalStickFromMenu(enableSignalStickFromMenu);
 
         pet.setDespawnSkill(despawnSkillName);
         pet.setTamingProgressSkill(tamingSkillName);
@@ -205,9 +200,6 @@ public class PetConfig extends AbstractConfig {
 
         final ItemStack icon = legacyItemRead(pet.getIcon(), true, pet.toString(), "§cIcon (not set)", "Icon");
         pet.setIcon(icon);
-
-        final ItemStack signalStickItem = legacyItemRead(pet.getSignalStick(), false, Items.buildSignalStickTag(pet), "§cSignal stick (not set)", "Signals.Item");
-        pet.setSignalStick(signalStickItem);
 
         reloadSkins();
         reloadLevels();

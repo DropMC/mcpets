@@ -49,7 +49,7 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <survival.core.version>d2f1a9d</survival.core.version>
+        <survival.core.version>bb64e98</survival.core.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <repositories>

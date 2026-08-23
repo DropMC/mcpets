@@ -14,7 +14,6 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import dev.triumphteam.gui.guis.GuiItem;
@@ -29,8 +28,6 @@ import gg.dropmc.survival.core.api.item.Rarity;
 import gg.dropmc.survival.core.api.nexo.NexoGlyph;
 
 import fr.nocsy.mcpets.data.Pet;
-import fr.nocsy.mcpets.data.livingpets.PetLevel;
-import fr.nocsy.mcpets.data.livingpets.PetStats;
 import fr.nocsy.mcpets.data.sql.PlayerData;
 
 /**
@@ -109,7 +106,7 @@ public class PetsMenu extends PaginatedMenu<PetsMenu.Entry> {
         final ItemStack icon = pet.getIcon();
 
         final GuiItems.Builder builder = GuiItems.of(icon)
-                .name(name(icon, pet.getRarity()))
+                .name(PetIcons.name(icon, pet.getRarity()))
                 .lore(lore(entry))
                 .hideAttributes();
 
@@ -163,21 +160,8 @@ public class PetsMenu extends PaginatedMenu<PetsMenu.Entry> {
     }
 
     private static String plainName(final Entry entry) {
-        final Component name = displayName(entry.pet().getIcon());
+        final Component name = PetIcons.displayName(entry.pet().getIcon());
         return name == null ? entry.pet().getId() : PlainTextComponentSerializer.plainText().serialize(name);
-    }
-
-    /**
-     * The icon's configured name. A pet that picks its own color keeps it - the dragons are colored by
-     * element, and painting all of them in the tier color would trade that identity for information the
-     * badge line already carries. Only an uncolored name falls back to the rarity color.
-     */
-    private static Component name(final ItemStack icon, final Rarity rarity) {
-        Component name = displayName(icon);
-        if (name == null) name = Component.text("???");
-        if (rarity != null && name.color() == null) name = name.color(rarity.color());
-
-        return name.decoration(TextDecoration.ITALIC, false);
     }
 
     /**
@@ -194,14 +178,14 @@ public class PetsMenu extends PaginatedMenu<PetsMenu.Entry> {
             lore.add(Component.empty());
         }
 
-        final List<Component> description = description(entry.pet().getIcon());
+        final List<Component> description = PetIcons.description(entry.pet().getIcon());
         if (!description.isEmpty()) {
             lore.addAll(description);
             lore.add(Component.empty());
         }
 
         if (entry.owned()) {
-            lore.addAll(progress(entry.pet().getPetStats()));
+            lore.addAll(PetIcons.progress(entry.pet().getPetStats()));
         }
 
         if (!entry.owned()) {
@@ -211,52 +195,9 @@ public class PetsMenu extends PaginatedMenu<PetsMenu.Entry> {
         } else if (player.equals(owner)) {
             // A staff member inspecting someone else's catalogue can look but not summon, so that
             // branch deliberately leaves the tooltip without an action hint.
-            lore.add(NexoGlyph.MOUSE_LEFT.appendSpace()
-                    .append(Component.text("|", NamedTextColor.GREEN))
-                    .appendSpace()
-                    .append(Component.text("Invocar", NamedTextColor.WHITE))
-                    .decoration(TextDecoration.ITALIC, false));
+            lore.add(PetIcons.action(NexoGlyph.MOUSE_LEFT, "Invocar"));
         }
 
         return lore;
-    }
-
-    /** The level and experience block, empty when the pet has no stats recorded yet. */
-    private static List<Component> progress(final PetStats stats) {
-        if (stats == null || stats.getCurrentLevel() == null) return List.of();
-
-        final List<Component> block = new ArrayList<>();
-        block.add(label("Nível: ", stats.getCurrentLevel().getLevelName()));
-
-        final PetLevel next = stats.getNextLevel();
-        if (next == null || next.equals(stats.getCurrentLevel())) {
-            block.add(label("Experiência: ", "máxima"));
-        } else {
-            block.add(label("Experiência: ",
-                    (int) stats.getExperience() + "/" + (int) next.getExpThreshold()));
-        }
-
-        block.add(Component.empty());
-        return block;
-    }
-
-    private static Component label(final String label, final String value) {
-        return Component.text(label, NamedTextColor.GRAY)
-                .append(Component.text(value, NamedTextColor.WHITE))
-                .decoration(TextDecoration.ITALIC, false);
-    }
-
-    private static Component displayName(final ItemStack icon) {
-        final ItemMeta meta = icon.getItemMeta();
-        return meta == null ? null : meta.displayName();
-    }
-
-    private static List<Component> description(final ItemStack icon) {
-        final ItemMeta meta = icon.getItemMeta();
-        if (meta == null || !meta.hasLore() || meta.lore() == null) return List.of();
-
-        return meta.lore().stream()
-                .map(line -> line.decoration(TextDecoration.ITALIC, false))
-                .toList();
     }
 }

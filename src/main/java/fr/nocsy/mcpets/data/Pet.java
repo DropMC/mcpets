@@ -56,9 +56,6 @@ import fr.nocsy.mcpets.modeler.bone.AbstractNameTag;
 public class Pet {
 
     //---------------------------------------------------------------------
-    public static final String SIGNAL_STICK_TAG = "&MCPets-SignalSticks&";
-
-    //---------------------------------------------------------------------
     public static final int BLOCKED = 2;
     public static final int MOB_SPAWN = 0;
     public static final int DESPAWNED_PREVIOUS = 1;
@@ -137,10 +134,6 @@ public class Pet {
     @Getter
     private ItemStack icon;
 
-    @Setter
-    @Getter
-    private ItemStack signalStick;
-
     @Getter
     @Setter
     private String currentName;
@@ -177,10 +170,6 @@ public class Pet {
     @Getter
     @Setter
     private List<String> signals;
-
-    @Getter
-    @Setter
-    private boolean enableSignalStickFromMenu;
 
     private Map<String, Long> petFoodEatenTimestamps;
 
@@ -290,23 +279,6 @@ public class Pet {
         // If no category found or category is DEFAULT/PET, return false
         Debugger.send("§cPet not found in any category, defaulting to PET");
         return false;
-    }
-
-    /**
-     * Remove all signal sticks belonging to the given pet from the player's inventory.
-     * Used on despawn to ensure the item does not persist in the player's hands.
-     */
-    public static void clearStickSignals(final Player p, final String petId) {
-        if (p == null)
-            return;
-        for (int i = 0; i < p.getInventory().getSize(); i++) {
-            final ItemStack item = p.getInventory().getItem(i);
-            if (Items.isSignalStick(item)
-                    && Pet.getFromSignalStick(item) != null
-                    && Pet.getFromSignalStick(item).getId().equals(petId)) {
-                p.getInventory().setItem(i, new ItemStack(Material.AIR));
-            }
-        }
     }
 
     /**
@@ -437,17 +409,6 @@ public class Pet {
     public void setLastOpInteracted(final Player p) {
         if (p.hasPermission(PPermission.ADMIN_OTHERS.getPermission()))
             p.setMetadata("AlmPetOp", new FixedMetadataValue(MCPets.getInstance(), this));
-    }
-
-    /**
-     * Return the pet from the signal stick item
-     * null if none is found matching the id
-     */
-    public static Pet getFromSignalStick(final ItemStack signalStick) {
-        final String petId = Items.getPetTag(signalStick);
-        if (petId != null)
-            return Pet.getFromId(petId);
-        return null;
     }
 
     /**
@@ -1102,8 +1063,6 @@ public class Pet {
                         reason.equals(PetDespawnReason.SPAWN_ISSUE)) {
                     Language.REVOKED_UNKNOWN.sendMessage(ownerPlayer);
                 }
-                if (enableSignalStickFromMenu)
-                    clearStickSignals(ownerPlayer, this.id);
             }
         }
 
@@ -1360,11 +1319,9 @@ public class Pet {
         pet.setDefaultInventorySize(defaultInventorySize);
         pet.setAutoRide(autoRide);
         pet.setIcon(icon);
-        pet.setSignalStick(signalStick);
         pet.setOwner(owner);
         if (activeMob != null) pet.setActiveMob(activeMob);
         pet.setSignals(signals);
-        pet.setEnableSignalStickFromMenu(enableSignalStickFromMenu);
         return pet;
     }
 
@@ -1450,23 +1407,6 @@ public class Pet {
             return MCPets.getModeler().getNameTag(localUUID);
         }
         return null;
-    }
-
-    /**
-     * Give a signal stick to the player linked to this pet.
-     * Does nothing if the signal stick feature is disabled globally or per-pet configuration.
-     */
-    public void giveStickSignals(final Player p) {
-        if (getOwner() == null || getSignalStick() == null) return;
-
-        if (p == null) return;
-
-        // Respect per-pet configuration flag
-        if (!enableSignalStickFromMenu) return;
-
-        clearStickSignals(p, this.id);
-
-        if (!p.getInventory().contains(signalStick)) p.getInventory().addItem(signalStick);
     }
 
     /**
@@ -1580,84 +1520,92 @@ public class Pet {
     public ItemStack applyStats(final ItemStack item) {
         // If we show the stats then we should not modify the actual item, but just its instance in that function
         final ItemStack it = item.clone();
-        // Handles the statistics being shown on the icon
-        if (petStats != null) {
+        final List<Component> stats = statsLore();
+        if (!stats.isEmpty()) {
             final ItemMeta meta = it.getItemMeta();
             // Recover the existing lores
-            List<Component> lores = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
+            final List<Component> lores = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
             // Add a space
             lores.add(Component.empty());
-
-            // Implement the progress bar
-            final StringBuilder progressBar = new StringBuilder();
-            final PetLevel nextLevel = petStats.getNextLevel();
-            if (nextLevel != null) {
-                if (nextLevel.equals(petStats.getCurrentLevel())) {
-                    progressBar.append(Language.PET_STATS_MAX_LEVEL.getMessage());
-                } else {
-                    // Size of the progress bar in the hovering
-                    final int progressBarSize = GlobalConfig.instance.getExperienceBarSize();
-
-                    final double experienceRatio = (petStats.getExperience() - petStats.getCurrentLevel().getExpThreshold()) / (nextLevel.getExpThreshold() - petStats.getCurrentLevel().getExpThreshold());
-                    final int indexProgress = Math.min(progressBarSize, (int) (experienceRatio * progressBarSize + 0.5));
-
-                    for (int i = 0; i < progressBarSize; i++) {
-                        if (i < indexProgress)
-                            progressBar.append(GlobalConfig.getInstance().getExperienceColorDone())
-                                    .append(GlobalConfig.getInstance().getExperienceSymbol())
-                                    .append(GlobalConfig.getInstance().getExperienceColorLeft());
-                        else
-                            progressBar.append(GlobalConfig.getInstance().getExperienceColorLeft())
-                                    .append(GlobalConfig.getInstance().getExperienceSymbol())
-                                    .append(GlobalConfig.getInstance().getExperienceColorLeft());
-                    }
-                }
-                if (nextLevel.getEvolutionId() != null
-                        && !nextLevel.canEvolve(owner, Pet.getFromId(nextLevel.getEvolutionId()))) {
-                    progressBar.append('\n').append(Language.PET_STATS_EVOLUTION_ALREADY_OWNED.getMessage());
-                }
-            }
-
-            // Get the positive or negative sign symbol of the bonus
-            final String signSymbol_damageModifier = Utils.getSignSymbol(petStats.getDamageModifier() - 1);
-            final String signSymbol_resistanceModifier = Utils.getSignSymbol(petStats.getResistanceModifier() - 1);
-            final String signSymbol_power = Utils.getSignSymbol(petStats.getPower() - 1);
-
-            String currentHealthStr = Integer.toString((int) petStats.getCurrentHealth());
-            if (petStats.getCurrentHealth() == 0
-                    && petStats.getRespawnTimer() != null && !petStats.getRespawnTimer().isRunning())
-                currentHealthStr = Integer.toString((int) petStats.getRespawnHealth());
-
-            // Handles the status of the pet
-            String status = Language.PET_STATUS_ALIVE.getMessage();
-            if (petStats.isRespawnTimerRunning()) {
-                status = Language.PET_STATUS_DEAD.getMessageFormatted(new FormatArg("%timeleft%",
-                        Integer.toString(petStats.getRespawnTimer().getRemainingTime())));
-            } else if (petStats.isRevokeTimerRunning())
-                status = Language.PET_STATUS_REVOKED.getMessageFormatted(new FormatArg("%timeleft%",
-                        Integer.toString(petStats.getRevokeTimer().getRemainingTime())));
-
-            final String statsLore = Language.PET_STATS.getMessageFormatted(
-                    new FormatArg("%status%", status),
-                    new FormatArg("%levelname%", petStats.getCurrentLevel().getLevelName()),
-                    new FormatArg("%health%", currentHealthStr),
-                    new FormatArg("%maxhealth%", Integer.toString((int) petStats.getCurrentLevel().getMaxHealth())),
-                    new FormatArg("%regeneration%", Double.toString(petStats.getCurrentLevel().getRegeneration())),
-                    new FormatArg("%damagemodifier%", signSymbol_damageModifier + (int) (100 * (petStats.getDamageModifier() - 1))),
-                    new FormatArg("%resistancemodifier%", signSymbol_resistanceModifier + (int) (100 * (petStats.getResistanceModifier() - 1))),
-                    new FormatArg("%power%", signSymbol_power + (int) (100 * (petStats.getPower() - 1))),
-                    new FormatArg("%experience%", Integer.toString((int) petStats.getExperience())),
-                    new FormatArg("%threshold%", Integer.toString((int) petStats.getNextLevel().getExpThreshold())),
-                    new FormatArg("%progressbar%", progressBar.toString()));
-
-            // add the formatted statistics
-            lores.addAll(Utils.toComponents(statsLore));
+            lores.addAll(stats);
 
             meta.lore(lores);
-
             it.setItemMeta(meta);
         }
         return it;
+    }
+
+    /**
+     * The pet's stat block: status, level, health, the three modifiers and the experience bar, laid out
+     * by {@link Language#PET_STATS} so an admin can restyle it in {@code language.yml}. Empty when the
+     * pet has no stats loaded, which is the case for a pet nobody owns yet.
+     */
+    public List<Component> statsLore() {
+        if (petStats == null) return List.of();
+
+        // Implement the progress bar
+        final StringBuilder progressBar = new StringBuilder();
+        final PetLevel nextLevel = petStats.getNextLevel();
+        if (nextLevel != null) {
+            if (nextLevel.equals(petStats.getCurrentLevel())) {
+                progressBar.append(Language.PET_STATS_MAX_LEVEL.getMessage());
+            } else {
+                // Size of the progress bar in the hovering
+                final int progressBarSize = GlobalConfig.instance.getExperienceBarSize();
+
+                final double experienceRatio = (petStats.getExperience() - petStats.getCurrentLevel().getExpThreshold()) / (nextLevel.getExpThreshold() - petStats.getCurrentLevel().getExpThreshold());
+                final int indexProgress = Math.min(progressBarSize, (int) (experienceRatio * progressBarSize + 0.5));
+
+                for (int i = 0; i < progressBarSize; i++) {
+                    if (i < indexProgress)
+                        progressBar.append(GlobalConfig.getInstance().getExperienceColorDone())
+                                .append(GlobalConfig.getInstance().getExperienceSymbol())
+                                .append(GlobalConfig.getInstance().getExperienceColorLeft());
+                    else
+                        progressBar.append(GlobalConfig.getInstance().getExperienceColorLeft())
+                                .append(GlobalConfig.getInstance().getExperienceSymbol())
+                                .append(GlobalConfig.getInstance().getExperienceColorLeft());
+                }
+            }
+            if (nextLevel.getEvolutionId() != null
+                    && !nextLevel.canEvolve(owner, Pet.getFromId(nextLevel.getEvolutionId()))) {
+                progressBar.append('\n').append(Language.PET_STATS_EVOLUTION_ALREADY_OWNED.getMessage());
+            }
+        }
+
+        // Get the positive or negative sign symbol of the bonus
+        final String signSymbol_damageModifier = Utils.getSignSymbol(petStats.getDamageModifier() - 1);
+        final String signSymbol_resistanceModifier = Utils.getSignSymbol(petStats.getResistanceModifier() - 1);
+        final String signSymbol_power = Utils.getSignSymbol(petStats.getPower() - 1);
+
+        String currentHealthStr = Integer.toString((int) petStats.getCurrentHealth());
+        if (petStats.getCurrentHealth() == 0
+                && petStats.getRespawnTimer() != null && !petStats.getRespawnTimer().isRunning())
+            currentHealthStr = Integer.toString((int) petStats.getRespawnHealth());
+
+        // Handles the status of the pet
+        String status = Language.PET_STATUS_ALIVE.getMessage();
+        if (petStats.isRespawnTimerRunning()) {
+            status = Language.PET_STATUS_DEAD.getMessageFormatted(new FormatArg("%timeleft%",
+                    Integer.toString(petStats.getRespawnTimer().getRemainingTime())));
+        } else if (petStats.isRevokeTimerRunning())
+            status = Language.PET_STATUS_REVOKED.getMessageFormatted(new FormatArg("%timeleft%",
+                    Integer.toString(petStats.getRevokeTimer().getRemainingTime())));
+
+        final String statsLore = Language.PET_STATS.getMessageFormatted(
+                new FormatArg("%status%", status),
+                new FormatArg("%levelname%", petStats.getCurrentLevel().getLevelName()),
+                new FormatArg("%health%", currentHealthStr),
+                new FormatArg("%maxhealth%", Integer.toString((int) petStats.getCurrentLevel().getMaxHealth())),
+                new FormatArg("%regeneration%", Double.toString(petStats.getCurrentLevel().getRegeneration())),
+                new FormatArg("%damagemodifier%", signSymbol_damageModifier + (int) (100 * (petStats.getDamageModifier() - 1))),
+                new FormatArg("%resistancemodifier%", signSymbol_resistanceModifier + (int) (100 * (petStats.getResistanceModifier() - 1))),
+                new FormatArg("%power%", signSymbol_power + (int) (100 * (petStats.getPower() - 1))),
+                new FormatArg("%experience%", Integer.toString((int) petStats.getExperience())),
+                new FormatArg("%threshold%", Integer.toString((int) petStats.getNextLevel().getExpThreshold())),
+                new FormatArg("%progressbar%", progressBar.toString()));
+
+        return Utils.toComponents(statsLore);
     }
 
     /**

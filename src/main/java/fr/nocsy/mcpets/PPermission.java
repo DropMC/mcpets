@@ -39,7 +39,6 @@ public enum PPermission {
     public static final String ADMIN_SPAWN_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.admin.spawn";
     public static final String ADMIN_RESET_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.admin.reset";
     public static final String ADMIN_GIVE_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.admin.give";
-    public static final String ADMIN_STICK_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.admin.stick";
     public static final String ADMIN_ITEM_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.admin.item";
 
     /** Acting on someone else's pet, whether through a command or by clicking it in the world. */

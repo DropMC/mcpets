@@ -55,7 +55,6 @@ public enum Language {
     SUMMONED(MessageType.SUCCESS, "Seu pet foi chamado."),
     NICKNAME_CHANGED_SUCCESSFULY(MessageType.SUCCESS, "Nome alterado."),
     SKIN_APPLIED(MessageType.SUCCESS, "Aparência alterada."),
-    SIGNAL_STICK_GIVEN(MessageType.SUCCESS, "Você recebeu o bastão de ordens. Clique com o direito para dar uma ordem e com o esquerdo para trocar de ordem."),
     PETUNLOCKED(MessageType.SUCCESS, "Você desbloqueou o pet <gold>%petName%</gold>."),
     ITEM_UPDATED(MessageType.SUCCESS, "Item atualizado na chave <gold>%key%</gold>."),
     KEY_REMOVED(MessageType.SUCCESS, "Chave removida."),

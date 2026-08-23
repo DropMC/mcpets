@@ -40,8 +40,6 @@ public class MountInteractionMenu {
             inventory.setItem(3, Items.RENAME.getItem());
         if (GlobalConfig.getInstance().isMountable() && pet.isMountable())
             inventory.setItem(5, Items.MOUNT.getItem());
-        if (!pet.getSignals().isEmpty() && pet.isEnableSignalStickFromMenu())
-            inventory.setItem(6, pet.getSignalStick());
         if (pet.getInventorySize() > 0)
             inventory.setItem(7, Items.INVENTORY.getItem());
         inventory.setItem(4, pet.buildItem(Items.petInfo(pet), true));

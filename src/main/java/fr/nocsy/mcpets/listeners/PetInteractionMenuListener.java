@@ -29,7 +29,7 @@ import fr.nocsy.mcpets.data.PetSkin;
 import fr.nocsy.mcpets.data.config.Language;
 import fr.nocsy.mcpets.data.PetDespawnReason;
 import fr.nocsy.mcpets.data.config.FormatArg;
-import fr.nocsy.mcpets.gui.PetsMenu;
+import fr.nocsy.mcpets.data.inventories.MountMenu;
 import fr.nocsy.mcpets.data.inventories.PetInventory;
 import fr.nocsy.mcpets.data.inventories.PetInventoryHolder;
 
@@ -83,10 +83,7 @@ public class PetInteractionMenuListener implements Listener {
             return;
         }
 
-        final boolean isPetMenu = holder.getType() == PetInventoryHolder.Type.PET_INTERACTION_MENU;
-        final boolean isMountMenu = holder.getType() == PetInventoryHolder.Type.MOUNT_INTERACTION_MENU;
-
-        if (isPetMenu || isMountMenu) {
+        if (holder.getType() == PetInventoryHolder.Type.MOUNT_INTERACTION_MENU) {
             e.setCancelled(true);
 
             if (!(e.getWhoClicked() instanceof final Player p)) {
@@ -116,11 +113,6 @@ public class PetInteractionMenuListener implements Listener {
                 final String localizedName = PDCTag.get(it.getItemMeta());
                 if (localizedName == null) return;
 
-                if (localizedName.equals(Items.PETMENU.getLocalizedName())) {
-                    openBackPetMenu(p);
-                    return;
-                }
-
                 if (localizedName.equals(Items.MOUNTMENU.getLocalizedName())) {
                     openBackMountMenu(p);
                     return;
@@ -132,8 +124,6 @@ public class PetInteractionMenuListener implements Listener {
                     changeName(p);
                 } else if (localizedName.equals(Items.INVENTORY.getLocalizedName())) {
                     inventory(p, pet);
-                } else if (pet.getSignalStick() != null && it.isSimilar(pet.getSignalStick())) {
-                    pet.giveStickSignals(p);
                 } else if (localizedName.equals(Items.SKINS.getLocalizedName())) {
                     skins(p, pet);
                 }
@@ -177,12 +167,7 @@ public class PetInteractionMenuListener implements Listener {
         }
     }
 
-    private void openBackPetMenu(final Player p) {
-        new PetsMenu(p).open();
-    }
-
     private void openBackMountMenu(final Player p) {
-        final fr.nocsy.mcpets.data.inventories.MountMenu menu = new fr.nocsy.mcpets.data.inventories.MountMenu(p, 0);
-        menu.open(p);
+        new MountMenu(p, 0).open(p);
     }
 }
