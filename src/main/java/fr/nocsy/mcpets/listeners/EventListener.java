@@ -28,6 +28,7 @@ public class EventListener implements Listener {
 
         listeners.add(new LivingPetsListener());
         listeners.add(new PetPveListener());
+        listeners.add(new PetDamageAttributionListener());
 
         listeners.add(new MythicListener());
 
