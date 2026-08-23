@@ -1,17 +1,16 @@
 package fr.nocsy.mcpets.listeners;
 
 import fr.nocsy.mcpets.data.Pet;
+import fr.nocsy.mcpets.utils.PetDamage;
 import gg.dropmc.survival.core.util.DamageUtil;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.projectiles.ProjectileSource;
 
 /**
  * Keeps pets out of everything this PvE server does not have: fighting players, and fighting what belongs to them.
@@ -28,7 +27,7 @@ public class PetPveListener implements Listener {
      */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void petDamagesProtected(EntityDamageByEntityEvent event) {
-        if (!isProtectedFromPets(event.getEntity()) || petBehind(event) == null) {
+        if (!isProtectedFromPets(event.getEntity()) || PetDamage.behind(event) == null) {
             return;
         }
         event.setDamage(0);
@@ -75,27 +74,4 @@ public class PetPveListener implements Listener {
         return entity instanceof Tameable tameable && tameable.isTamed();
     }
 
-    /**
-     * The pet responsible for the damage, or null if no pet is behind it. The damage source is asked first because it
-     * is what attributes an explosion or a lingering cloud back to whoever created it.
-     */
-    private static Pet petBehind(EntityDamageByEntityEvent event) {
-        Pet direct = Pet.getFromEntity(event.getDamager());
-        if (direct != null) {
-            return direct;
-        }
-
-        Pet causing = Pet.getFromEntity(event.getDamageSource().getCausingEntity());
-        if (causing != null) {
-            return causing;
-        }
-
-        if (event.getDamager() instanceof Projectile projectile) {
-            ProjectileSource shooter = projectile.getShooter();
-            if (shooter instanceof Entity entity) {
-                return Pet.getFromEntity(entity);
-            }
-        }
-        return null;
-    }
 }
