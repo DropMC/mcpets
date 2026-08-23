@@ -50,7 +50,7 @@ public enum Language {
     NO_ATTACK_HERE(MessageType.ERROR, "Seu pet não pode atacar aqui."),
     KEY_LIST(MessageType.INFO, "<gray>Chaves disponíveis:"),
     TAG_TO_REMOVE_NAME(MessageType.INFO, "Nenhum"),
-    PET_STATS(MessageType.INFO, "<white>%health%<gray>/<white>%maxhealth% <red>❤\n<gray>Regeneração: <white>%regeneration%</white> ❤/s\n<gray>Dano: <white>%damagemodifier%%\n<gray>Resistência: <white>%resistancemodifier%%\n<gray>Poder: <white>%power%%\n \n<gray>Nível: <white>%levelname%\n%progressbar% <gray>(<white>%experience%<gray>/<white>%threshold%<gray>)"),
+    PET_STATS(MessageType.INFO, "<gray>Vida: <white>%health%<gray>/<white>%maxhealth% <red>❤ <dark_gray>· <gray>Regeneração: <white>%regeneration%<gray>/s\n<gray>Dano: <white>%damagemodifier%% <dark_gray>· <gray>Resistência: <white>%resistancemodifier%% <dark_gray>· <gray>Poder: <white>%power%%\n \n<gray>Nível: <white>%levelname%\n%progressbar% <gray>(<white>%experience%<gray>/<white>%threshold%<gray>)"),
     TYPE_NAME_IN_CHAT(MessageType.INFO, "<gray>Escreva no chat o nome que você quer dar ao seu pet."),
     IF_WISH_TO_REMOVE_NAME(MessageType.INFO, "<gray>Para tirar o nome, escreva <white>%tag%</white> no chat."),
     SUMMONED(MessageType.SUCCESS, "Seu pet foi chamado."),
