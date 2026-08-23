@@ -1,8 +1,8 @@
 package fr.nocsy.mcpets.utils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 
 import io.lumine.mythic.bukkit.BukkitAdapter;
@@ -10,22 +10,15 @@ import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.skills.auras.Aura;
 import io.lumine.mythic.core.skills.auras.AuraRegistry;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import gg.dropmc.survival.core.feature.actionbar.api.ActionBarAPI;
-import gg.dropmc.survival.core.feature.actionbar.api.ActionBarHandle;
-import gg.dropmc.survival.core.feature.actionbar.api.ActionBarPriority;
 
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.config.GlobalConfig;
 import fr.nocsy.mcpets.data.config.Language;
 
 /**
- * The countdown until a pet can attack again, shown on the action bar.
+ * The wait until a pet can attack again.
  *
  * <p>The wait itself belongs to MythicMobs: the attack skill hangs an aura on the owner for exactly as
  * long as the skill's own cooldown, and the pack's conditions read that aura to decide whether an order
@@ -34,7 +27,7 @@ import fr.nocsy.mcpets.data.config.Language;
  */
 public final class PetAttackCooldown {
 
-    private static final Map<UUID, ActionBarHandle> displays = new HashMap<>();
+    private static final Set<UUID> watched = new HashSet<>();
 
     private PetAttackCooldown() {}
 
@@ -44,16 +37,19 @@ public final class PetAttackCooldown {
     }
 
     /**
-     * Starts the action bar countdown, unless one is already running for this player. It takes itself
-     * down when the aura runs out, announcing that the pet is ready again.
+     * Waits for the cooldown to run out and tells the owner their pet can attack again. Does nothing if
+     * a watch is already pending for them.
      *
      * @param player the pet's owner, who just gave an attack order
      */
     public static void watch(final Player player) {
         final UUID uuid = player.getUniqueId();
-        if (displays.containsKey(uuid) || remainingTicks(player) <= 0) return;
+        if (!watched.add(uuid)) return;
 
-        displays.put(uuid, ActionBarAPI.source(player, ActionBarPriority.NORMAL, () -> line(player)));
+        if (remainingTicks(player) <= 0) {
+            watched.remove(uuid);
+            return;
+        }
 
         new BukkitRunnable() {
             @Override
@@ -67,15 +63,9 @@ public final class PetAttackCooldown {
         }.runTaskTimer(MCPets.getInstance(), 10L, 10L);
     }
 
-    /** Drops the countdown for a player, e.g. when their pet is stored or they disconnect. */
+    /** Drops a pending watch, e.g. when the pet is stored and there is nothing left to announce to. */
     public static void clear(final UUID uuid) {
-        final ActionBarHandle handle = displays.remove(uuid);
-        if (handle != null) handle.remove();
-    }
-
-    private static Component line(final Player player) {
-        return Component.text("Ataque em ", NamedTextColor.GRAY)
-                .append(Component.text(remainingSeconds(player) + "s", NamedTextColor.WHITE));
+        watched.remove(uuid);
     }
 
     /**

@@ -42,8 +42,6 @@ public class SignalStickListener implements Listener {
         if (nextSignal == null) return;
 
         PlayerSignal.setSignal(owner, nextSignal);
-        p.sendActionBar(Language.SIGNAL_STICK_SIGNAL.getComponentFormatted(
-                new FormatArg("%signal%", nextSignal.toLowerCase().replace("_", " "))));
     }
 
     @EventHandler

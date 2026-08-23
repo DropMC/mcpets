@@ -46,7 +46,6 @@ public enum Language {
     PET_STATUS_REVOKED(MessageType.INFO, "<red>Indisponível <dark_gray>(%timeleft%s)"),
     PET_STATUS_DEAD(MessageType.INFO, "<red>Ferido <dark_gray>(%timeleft%s)"),
     PET_TAMING_PROGRESS(MessageType.INFO, "<gray>Domesticando: <green>%progress%%</green> %progressbar%"),
-    SIGNAL_STICK_SIGNAL(MessageType.INFO, "<gray>Ordem ativa: <white>%signal%"),
     NO_ATTACK_HERE(MessageType.ERROR, "Seu pet não pode atacar aqui."),
     ATTACK_ON_COOLDOWN(MessageType.ERROR, "Seu pet ainda está se recarregando. <gray>(%time%s)"),
     ATTACK_READY(MessageType.SUCCESS, "Seu pet está pronto para atacar de novo."),
