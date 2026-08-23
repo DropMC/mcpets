@@ -131,6 +131,10 @@ public class PetActionMenu extends AbstractMenu {
 
         final List<Component> stats = pet.statsLore();
         if (!stats.isEmpty()) {
+            // The numbers read as a continuation of what is above them, so whatever section came last
+            // gives up its trailing blank line rather than opening a gap in the middle of the tooltip.
+            if (!lore.isEmpty() && lore.getLast().equals(Component.empty())) lore.removeLast();
+
             stats.stream().map(line -> line.decoration(TextDecoration.ITALIC, false)).forEach(lore::add);
             lore.add(Component.empty());
         }

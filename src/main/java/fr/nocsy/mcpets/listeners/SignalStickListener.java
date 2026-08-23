@@ -16,6 +16,7 @@ import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.PlayerSignal;
 import fr.nocsy.mcpets.data.config.FormatArg;
 import fr.nocsy.mcpets.data.config.Language;
+import fr.nocsy.mcpets.utils.PetProtection;
 
 /**
  * Commanding a pet with a stick. Any stick works, and only while the player has a pet out, so there
@@ -70,6 +71,13 @@ public class SignalStickListener implements Listener {
 
         final Pet pet = Pet.fromOwner(p.getUniqueId());
         if (pet == null || !pet.isStillHere()) return false;
+
+        // Refused before the skill runs, not after: cancelling the damage it deals would still leave the
+        // knockback, the stuns and the particles going off in a place where none of that belongs.
+        if (!PetProtection.mayFight(p)) {
+            Language.NO_ATTACK_HERE.sendMessage(p);
+            return true;
+        }
 
         pet.sendSignal(PlayerSignal.getSignalTag(p.getUniqueId()));
         return true;

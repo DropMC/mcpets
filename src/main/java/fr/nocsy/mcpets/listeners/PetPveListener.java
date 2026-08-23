@@ -2,7 +2,9 @@ package fr.nocsy.mcpets.listeners;
 
 import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.utils.PetDamage;
+import fr.nocsy.mcpets.utils.PetProtection;
 import gg.dropmc.survival.core.util.DamageUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
@@ -35,6 +37,21 @@ public class PetPveListener implements Listener {
     }
 
     /**
+     * Cancels damage a pet deals where its owner would not be allowed to deal it. The pets hit through
+     * MythicMobs' native damage mechanic, which arrives as mob-on-mob damage that no region plugin guards,
+     * so without this a pet kills the NPCs and animals at spawn that its owner cannot touch.
+     */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void petDamagesOutOfBounds(EntityDamageByEntityEvent event) {
+        Pet pet = PetDamage.behind(event);
+        if (pet == null || PetProtection.mayDamage(owner(pet), event.getEntity())) {
+            return;
+        }
+        event.setDamage(0);
+        event.setCancelled(true);
+    }
+
+    /**
      * Cancels any damage a player deals to a pet, their own included. The owner's hit is what opens the pet menu
      * (see {@link PetListener#interact}), and that handler runs after this one because it does not ignore cancelled
      * events, so the menu still opens while the pet takes nothing.
@@ -53,10 +70,18 @@ public class PetPveListener implements Listener {
      */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void petTargetsProtected(EntityTargetEvent event) {
-        if (!isProtectedFromPets(event.getTarget()) || Pet.getFromEntity(event.getEntity()) == null) {
+        Pet pet = Pet.getFromEntity(event.getEntity());
+        if (pet == null) {
             return;
         }
-        event.setCancelled(true);
+        if (isProtectedFromPets(event.getTarget()) || !PetProtection.mayDamage(owner(pet), event.getTarget())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /** The pet's owner if they are online, which is who every protection question is asked about. */
+    private static Player owner(Pet pet) {
+        return pet.getOwner() == null ? null : Bukkit.getPlayer(pet.getOwner());
     }
 
     /**
