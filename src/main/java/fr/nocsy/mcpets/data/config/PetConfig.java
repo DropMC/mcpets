@@ -214,6 +214,10 @@ public class PetConfig extends AbstractConfig {
     }
 
     private ItemStack legacyItemRead(final ItemStack item, final boolean showStats, final String localName, final String defaultName, final String path) {
+        return Utils.hideAttributes(readConfiguredItem(item, showStats, localName, defaultName, path));
+    }
+
+    private ItemStack readConfiguredItem(final ItemStack item, final boolean showStats, final String localName, final String defaultName, final String path) {
         ItemStack itemStack = null;
         try {
             itemStack = getConfig().getItemStack(path + ".Raw");

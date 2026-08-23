@@ -10,16 +10,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.concurrent.CompletableFuture;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.event.Event;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -84,6 +92,32 @@ public class Utils {
             item.setItemMeta(meta);
             return item;
         }
+    }
+
+    /**
+     * Strips the vanilla attribute tooltip from an item that exists only to be looked at.
+     *
+     * Pet icons, menu buttons and the signal stick are ordinary materials picked for their model
+     * (golden horse armor, leather horse armor, player heads), so the armor and damage lines the
+     * material carries are noise wherever they show up. The flag alone does not cover a material's
+     * default modifiers, so the item gets an explicit list holding a single zeroed one, the same
+     * trick core's GuiItems#hideAttributes uses for the menus written against its toolkit.
+     */
+    public static ItemStack hideAttributes(final ItemStack item) {
+        if (item == null) return null;
+
+        final ItemMeta meta = item.getItemMeta();
+        if (meta == null) return item;
+
+        final NamespacedKey key = new NamespacedKey(MCPets.getInstance(), "hidden_attributes");
+        final Multimap<Attribute, AttributeModifier> modifiers = HashMultimap.create();
+        modifiers.put(Attribute.ATTACK_DAMAGE,
+                new AttributeModifier(key, 0, AttributeModifier.Operation.ADD_NUMBER));
+
+        meta.setAttributeModifiers(modifiers);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        item.setItemMeta(meta);
+        return item;
     }
 
     public static double distance(final Location loc1, final Location loc2) {

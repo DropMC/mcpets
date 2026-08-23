@@ -87,8 +87,9 @@ public enum Items {
     private void prepareItem() {
         ItemMeta meta = item.getItemMeta();
         PDCTag.set(meta, getLocalizedName());
-        
+
         item.setItemMeta(meta);
+        Utils.hideAttributes(item);
     }
 
     public String getLocalizedName() {
