@@ -1,5 +1,7 @@
 package fr.nocsy.mcpets;
 
+import fr.nocsy.mcpets.commands.CommandRegistry;
+
 import java.util.Map;
 import java.util.List;
 import java.util.UUID;
@@ -29,8 +31,6 @@ import fr.nocsy.mcpets.data.PetSkin;
 import fr.nocsy.mcpets.data.sql.Databases;
 import fr.nocsy.mcpets.data.sql.PlayerData;
 import fr.nocsy.mcpets.data.config.PetConfig;
-import fr.nocsy.mcpets.commands.CommandHandler;
-import fr.nocsy.mcpets.data.editor.EditorItems;
 import fr.nocsy.mcpets.data.flags.FlagsManager;
 import fr.nocsy.mcpets.modeler.AbstractModeler;
 import fr.nocsy.mcpets.listeners.EventListener;
@@ -46,7 +46,6 @@ import fr.nocsy.mcpets.compat.PlaceholderAPICompat;
 import fr.nocsy.mcpets.data.config.BlacklistConfig;
 import fr.nocsy.mcpets.data.config.ItemsListConfig;
 import fr.nocsy.mcpets.velocity.VelocitySyncManager;
-import fr.nocsy.mcpets.data.editor.EditorConversation;
 
 import static fr.nocsy.mcpets.mythicmobs.MythicListener.*;
 
@@ -92,10 +91,6 @@ public class MCPets extends JavaPlugin {
             // Hop back to main thread for tasks that must schedule on the main scheduler
             Bukkit.getScheduler().runTask(instance, MCPets::scheduleDbDependentTasks);
         });
-
-        for (final EditorItems item : EditorItems.values()) {
-            item.refreshData();
-        }
     }
 
     /**
@@ -153,7 +148,7 @@ public class MCPets extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        CommandHandler.init(this);
+        CommandRegistry.register(this);
         EventListener.init(this);
         modeler.registerListeners(this);
 
@@ -208,9 +203,7 @@ public class MCPets extends JavaPlugin {
         getLog().info("          See you soon           ");
         getLog().info("-=-=-=-= -=-=-=-=-=-=-=- =-=-=-=-");
 
-        // Cancel pending editor conversations before the JAR is unloaded to avoid
-        // IllegalStateException (zip file closed) if a listener fires after disable.
-        EditorConversation.clearAll();
+        CommandRegistry.unregister(this);
 
         if (modeler != null) {
             modeler.unregisterListeners();

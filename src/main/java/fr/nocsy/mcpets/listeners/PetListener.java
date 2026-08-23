@@ -445,7 +445,7 @@ public class PetListener implements Listener {
         if (e.getEntity() == null) return;
 
         // if it's not the owner or an admin mounting the pet, then we cancel it
-        if (!e.getPet().getOwner().equals(e.getEntity().getUniqueId()) && !e.getEntity().hasPermission(PPermission.ADMIN.getPermission())) {
+        if (!e.getPet().getOwner().equals(e.getEntity().getUniqueId()) && !e.getEntity().hasPermission(PPermission.ADMIN_OTHERS.getPermission())) {
             e.setCancelled(true);
             Debugger.send("§c" + e.getEntity().getName() + " can not mount " + e.getPet().getId() + " as he's not the owner, nor an admin.");
         }

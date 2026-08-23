@@ -407,7 +407,7 @@ public class Pet {
      * Get the pet from the last one that the player interacted with
      */
     public static Pet getFromLastOpInteractedWith(final Player p) {
-        if (p != null && p.hasPermission(PPermission.ADMIN.getPermission()) &&
+        if (p != null && p.hasPermission(PPermission.ADMIN_OTHERS.getPermission()) &&
                 p.hasMetadata("AlmPetOp") &&
                 !p.getMetadata("AlmPetOp").isEmpty() &&
                 p.getMetadata("AlmPetOp").getFirst() != null &&
@@ -428,7 +428,7 @@ public class Pet {
      * Associate the said op player to the pet as last interacted with
      */
     public void setLastOpInteracted(final Player p) {
-        if (p.hasPermission(PPermission.ADMIN.getPermission()))
+        if (p.hasPermission(PPermission.ADMIN_OTHERS.getPermission()))
             p.setMetadata("AlmPetOp", new FixedMetadataValue(MCPets.getInstance(), this));
     }
 

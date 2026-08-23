@@ -67,7 +67,7 @@ public class ModelEngineListeners implements Listener {
         // if it's not the owner or an admin mounting the pet, then we cancel it
         if (seat.isDriver() &&
                 !pet.getOwner().equals(player.getUniqueId()) &&
-                !player.hasPermission(PPermission.ADMIN.getPermission())) {
+                !player.hasPermission(PPermission.ADMIN_OTHERS.getPermission())) {
 
             e.setCancelled(true);
             Debugger.send("[ModelMountEvent] §c" + player.getName() + " can not mount model of " + pet.getId() + " as he's not the owner, nor an admin.");
