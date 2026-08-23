@@ -6,7 +6,6 @@ import fr.nocsy.mcpets.data.Category;
 import fr.nocsy.mcpets.data.CategoryType;
 import fr.nocsy.mcpets.data.Items;
 import fr.nocsy.mcpets.data.Pet;
-import fr.nocsy.mcpets.data.editor.EditorEditing;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -196,52 +195,5 @@ public class CategoryConfig extends AbstractConfig {
 
         if (clear)
             MCPets.getLog().info(Category.getCategories().size() + " categories registered successfully !");
-    }
-
-    public static void registerCleanCategory(final Player creator) {
-        final String id = UUID.randomUUID().toString();
-        final String folder = AbstractConfig.getPath() + "Categories/";
-        final String fileName = id + ".yml";
-
-        final File file = new File(folder + fileName);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (final IOException ignored) {}
-        }
-
-        new CategoryConfig(folder, fileName);
-        // reload the categories
-        load(AbstractConfig.getPath() + "Categories/", true);
-
-        // Associate the category the creator
-        final EditorEditing editing = EditorEditing.get(creator);
-        editing.setMappedId(id);
-    }
-
-    /**
-     * Loads a fresh config category and output a category object (for editor only)
-     */
-    public static Category loadConfigCategory(final String id) {
-        final CategoryConfig oldConfig = CategoryConfig.getMapping().get(id);
-        final CategoryConfig config = new CategoryConfig(oldConfig.getFolderName(), oldConfig.getFileName());
-        return config.getCategory();
-    }
-
-    public void addPet(final Pet pet) {
-        final List<String> pets = getConfig().getStringList("Pets");
-        if (!pets.contains(pet.getId()))
-            pets.add(pet.getId());
-        getConfig().set("Pets", pets);
-        save();
-        reload();
-    }
-
-    public void removePet(final Pet pet) {
-        final List<String> pets = getConfig().getStringList("Pets");
-        pets.remove(pet.getId());
-        getConfig().set("Pets", pets);
-        save();
-        reload();
     }
 }

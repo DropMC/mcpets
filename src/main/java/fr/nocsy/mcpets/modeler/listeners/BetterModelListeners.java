@@ -73,7 +73,7 @@ public class BetterModelListeners {
         // Check owner/admin permission
         if (isDriver
                 && !pet.getOwner().equals(playerEntity.getUniqueId())
-                && !playerEntity.hasPermission(PPermission.ADMIN.getPermission())) {
+                && !playerEntity.hasPermission(PPermission.ADMIN_OTHERS.getPermission())) {
             event.setCancelled(true);
             Debugger.send("[MountModelEvent] §c" + playerEntity.getName()
                     + " can not mount model of " + pet.getId()
