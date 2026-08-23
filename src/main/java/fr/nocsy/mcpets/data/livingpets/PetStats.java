@@ -115,6 +115,14 @@ public class PetStats {
      * Launch the timers that should be triggered initially if they are not null
      */
     public void launchTimers() {
+        // A pet that is alive has no respawn cooldown to serve. Launching the timer anyway leaves it
+        // reporting itself as running until its first scheduler tick, and a spawn requested in that
+        // same tick (the reconnection spawn loads the player data right before spawning) gets
+        // cancelled with a respawn cooldown message that has nothing to cool down.
+        if (!isDead()) {
+            initializingRun = false;
+            return;
+        }
         launchRespawnTimer();
     }
 
