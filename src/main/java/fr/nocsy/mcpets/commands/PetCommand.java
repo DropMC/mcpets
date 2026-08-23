@@ -14,7 +14,6 @@ import dev.rollczi.litecommands.annotations.permission.Permission;
 
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.PPermission;
-import fr.nocsy.mcpets.data.Category;
 import fr.nocsy.mcpets.data.Items;
 import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.config.FormatArg;
@@ -23,10 +22,10 @@ import fr.nocsy.mcpets.data.config.ItemsListConfig;
 import fr.nocsy.mcpets.data.config.Language;
 import fr.nocsy.mcpets.data.inventories.PetActionMenu;
 import fr.nocsy.mcpets.data.inventories.PetInventory;
-import fr.nocsy.mcpets.data.inventories.PetMenu;
 import fr.nocsy.mcpets.data.livingpets.PetFood;
 import fr.nocsy.mcpets.data.livingpets.PetStats;
 import fr.nocsy.mcpets.data.sql.PlayerData;
+import fr.nocsy.mcpets.gui.PetsMenu;
 import fr.nocsy.mcpets.listeners.PetInteractionMenuListener;
 import fr.nocsy.mcpets.utils.Utils;
 import fr.nocsy.mcpets.utils.debug.Debugger;
@@ -43,7 +42,7 @@ public class PetCommand {
     @Permission(PPermission.USE_NODE)
     @Description("Abre o menu dos seus pets.")
     public void menu(final @Context Player player) {
-        new PetMenu(player, 0).open(player);
+        new PetsMenu(player).open();
     }
 
     @Execute(name = "menu")
@@ -56,26 +55,6 @@ public class PetCommand {
         }
 
         PetActionMenu.open(player, active, false);
-    }
-
-    @Execute(name = "categoria")
-    @Permission(PPermission.CATEGORY_NODE)
-    @Description("Abre uma categoria de pets.")
-    public void category(final @Context CommandSender sender,
-                         final @Arg("categoria") Category category,
-                         final @OptionalArg("jogador") Player target) {
-        // Opening someone else's menu is the staff form of the same command.
-        if (target != null && !sender.hasPermission(PPermission.ADMIN_OTHERS.getPermission())) {
-            Language.NO_PERM.sendMessage(sender);
-            return;
-        }
-
-        final Player viewer = target != null ? target : asPlayer(sender);
-        if (viewer == null) {
-            return;
-        }
-
-        category.openInventory(viewer, 0);
     }
 
     @Execute(name = "nome")
@@ -200,7 +179,7 @@ public class PetCommand {
                 return;
             }
 
-            new PetMenu(online, 0).open(staff);
+            new PetsMenu(staff, online, 1).open();
             return;
         }
 

@@ -17,6 +17,8 @@ import dev.lone.itemsadder.api.CustomStack;
 import com.nexomc.nexo.api.NexoItems;
 import com.nexomc.nexo.items.ItemBuilder;
 
+import gg.dropmc.survival.core.api.item.Rarity;
+
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.Items;
@@ -71,7 +73,7 @@ public class PetConfig extends AbstractConfig {
             getConfig().set("SpawnRange", 3);
         if (getConfig().get("ComingBackRange") == null)
             getConfig().set("ComingBackRange", 3);
-        reorderKeys("Id", "MythicMob", "Permission", "Distance", "SpawnRange", "ComingBackRange",
+        reorderKeys("Id", "MythicMob", "Permission", "Rarity", "Distance", "SpawnRange", "ComingBackRange",
                 "Mountable", "MountType", "MountPermission", "DespawnOnDismount", "AutoRide",
                 "Invulnerable", "InventorySize", "UseDefaultMythicMobsName",
                 "DespawnSkill", "SpawnSkill", "Taming", "Icon", "Signals", "Levels");
@@ -176,6 +178,7 @@ public class PetConfig extends AbstractConfig {
         petConfigMapping.put(id, this);
         pet.setMythicMobName(mobType);
         pet.setPermission(permission);
+        pet.setRarity(Rarity.fromConfig(getConfig().getString("Rarity")));
         pet.setMountPermission(mountPermission);
         if (getConfig().get("Mountable") == null) {
             pet.setMountable(GlobalConfig.getInstance().isMountable());

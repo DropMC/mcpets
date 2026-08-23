@@ -28,7 +28,7 @@ import fr.nocsy.mcpets.data.PetSkin;
 import fr.nocsy.mcpets.data.config.Language;
 import fr.nocsy.mcpets.data.PetDespawnReason;
 import fr.nocsy.mcpets.data.config.FormatArg;
-import fr.nocsy.mcpets.data.inventories.PetMenu;
+import fr.nocsy.mcpets.gui.PetsMenu;
 import fr.nocsy.mcpets.data.inventories.PetInventory;
 import fr.nocsy.mcpets.data.inventories.PetInventoryHolder;
 
@@ -173,8 +173,7 @@ public class PetInteractionMenuListener implements Listener {
     }
 
     private void openBackPetMenu(final Player p) {
-        final PetMenu menu = new PetMenu(p, 0);
-        menu.open(p);
+        new PetsMenu(p).open();
     }
 
     private void openBackMountMenu(final Player p) {

@@ -30,6 +30,8 @@ import io.lumine.mythic.core.skills.SkillMetadataImpl;
 import io.lumine.mythic.api.adapters.AbstractLocation;
 import io.lumine.mythic.api.exceptions.InvalidMobTypeException;
 
+import gg.dropmc.survival.core.api.item.Rarity;
+
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.utils.Utils;
 import fr.nocsy.mcpets.PPermission;
@@ -105,6 +107,11 @@ public class Pet {
     @Setter
     @Getter
     private String mountPermission;
+
+    /** Tier shown as a badge in the pets menu, and the key the menu sorts owned pets by. */
+    @Setter
+    @Getter
+    private Rarity rarity;
 
     @Setter
     @Getter
@@ -1339,6 +1346,7 @@ public class Pet {
         pet.setPetLevels(petLevels);
         pet.setMythicMobName(mythicMobName);
         pet.setPermission(permission);
+        pet.setRarity(rarity);
         pet.setDistance(distance);
         pet.setSpawnRange(spawnRange);
         pet.setComingBackRange(comingBackRange);

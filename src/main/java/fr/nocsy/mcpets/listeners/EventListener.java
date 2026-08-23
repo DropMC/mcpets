@@ -12,7 +12,6 @@ public class EventListener implements Listener {
 
     public static void init(JavaPlugin plugin) {
 
-        listeners.add(new PetMenuListener());
         listeners.add(new MountMenuListener());
         listeners.add(new PetInteractionMenuListener());
         listeners.add(new PetListener());

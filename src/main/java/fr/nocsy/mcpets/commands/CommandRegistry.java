@@ -3,10 +3,8 @@ package fr.nocsy.mcpets.commands;
 import dev.rollczi.litecommands.LiteCommands;
 
 import fr.nocsy.mcpets.MCPets;
-import fr.nocsy.mcpets.commands.argument.CategoryArgument;
 import fr.nocsy.mcpets.commands.argument.PetArgument;
 import fr.nocsy.mcpets.commands.argument.PetFoodArgument;
-import fr.nocsy.mcpets.data.Category;
 import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.livingpets.PetFood;
 
@@ -26,7 +24,6 @@ public final class CommandRegistry {
         commands = CommandFactory.defaultBuilder(plugin)
                 .commands(new PetCommand(), new MountCommand())
                 .argument(Pet.class, new PetArgument())
-                .argument(Category.class, new CategoryArgument())
                 .argument(PetFood.class, new PetFoodArgument())
                 .build();
 
