@@ -106,7 +106,7 @@ public enum Language {
     SKIN_COULD_NOT_APPLY(MessageType.ERROR, "A aparência não pôde ser aplicada."),
     GLOBAL_RESPAWN_TIMER_RUNNING(MessageType.ERROR, "Espere <gold>%timeLeft%s</gold> para chamar um bichinho."),
     RESPAWN_TIMER_RUNNING(MessageType.ERROR, "Seu bichinho ainda está se recuperando. Espere <gold>%timeLeft%s</gold>."),
-    REVOKE_TIMER_RUNNING(MessageType.ERROR, "Seu bichinho ainda está se recuperando. Espere <gold>%timeLeft%s</gold>."),
+    REVOKE_TIMER_RUNNING(MessageType.ERROR, "Você acabou de guardar seu bichinho. Espere <gold>%timeLeft%s</gold> para chamá-lo de volta."),
     PLAYER_OR_PET_DOESNT_EXIST(MessageType.ERROR, "Este bichinho não existe, ou esse jogador nunca entrou no servidor."),
     PETFOOD_DOESNT_EXIST(MessageType.ERROR, "Esta comida de bichinho não existe."),
     PETUNLOCK_NOPERM(MessageType.ERROR, "Você não pode usar este item para desbloquear o bichinho."),

@@ -29,7 +29,7 @@ public class LanguageConfig extends AbstractConfig {
      * rewritten from the defaults, because keys are otherwise only ever added and never refreshed: without it a
      * server that already had a language.yml would keep the old text forever.
      */
-    private static final int LANGUAGE_VERSION = 2;
+    private static final int LANGUAGE_VERSION = 3;
 
     private static final String VERSION_KEY = "language_version";
 
