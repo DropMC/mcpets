@@ -235,19 +235,12 @@ public class Utils {
         }
     }
 
+    /**
+     * Kept for the announcement path. There is no prefix any more: chat lines are framed by core's MessageAPI with
+     * the templates every DropMC plugin shares, and a plugin name in front of the text is exactly what that replaced.
+     */
     public static Component toComponentWithPrefix(String text) {
-        if (text == null) return Component.empty();
-
-        text = GlobalConfig.getInstance().getPrefix() + text;
-        text = convertRawHexToMiniMessage(text);
-        text = convertSectionHexToMiniMessage(text);
-        text = convertLegacyToMiniMessage(text);
-
-        try {
-            return MiniMessage.miniMessage().deserialize(text).decoration(TextDecoration.ITALIC, false);
-        } catch (final Exception ex) {
-            return Component.text(text).decoration(TextDecoration.ITALIC, false);
-        }
+        return toComponent(text);
     }
 
     public static List<Component> toComponents(String text) {

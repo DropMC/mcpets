@@ -68,7 +68,7 @@ public class ArgumentPetFood extends AArgument {
                 try {
                     amount = Integer.parseInt(args[3]);
                 } catch (NumberFormatException ex) {
-                    sender.sendMessage("§cInvalid amount.");
+                    Language.INVALID_AMOUNT.sendMessage(sender);
                     return;
                 }
             }
@@ -79,7 +79,7 @@ public class ArgumentPetFood extends AArgument {
         }
 
         if (amount < 1) {
-            sender.sendMessage("§cAmount must be greater than 0.");
+            Language.INVALID_AMOUNT.sendMessage(sender);
             return;
         }
 
