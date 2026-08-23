@@ -106,7 +106,8 @@ public class PetsMenu extends PaginatedMenu<PetsMenu.Entry> {
 
         final GuiItems.Builder builder = GuiItems.of(icon)
                 .name(name(icon, pet.getRarity()))
-                .lore(lore(entry));
+                .lore(lore(entry))
+                .hideAttributes();
 
         if (!entry.owned() || !player.equals(owner)) {
             return builder.asGuiItem();
