@@ -9,6 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import fr.nocsy.mcpets.MCPets;
@@ -196,11 +199,22 @@ public class PetStats {
     }
 
     /**
-     * Reset the Max Health of the pet to the given value
+     * Raise the pet's health ceiling to what its level says it should be.
+     *
+     * The attribute is set through Bukkit rather than through MythicMobs' {@code AbstractEntity}, whose
+     * setter resolves the attribute by name and swallows the failure when the lookup comes back empty.
+     * That silence is what left every pet capped at the health its MythicMob declares (20) while the
+     * level config promised 50: the regeneration timer ran every second and was clamped at the ceiling,
+     * so the menu read a permanent 20/50.
      */
     public void refreshMaxHealth() {
         if (!pet.isStillHere()) return;
-        pet.getActiveMob().getEntity().setMaxHealth(currentLevel.getMaxHealth());
+        if (!(pet.getActiveMob().getEntity().getBukkitEntity() instanceof LivingEntity living)) return;
+
+        final AttributeInstance maxHealth = living.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealth == null) return;
+
+        maxHealth.setBaseValue(currentLevel.getMaxHealth());
     }
 
     /**
