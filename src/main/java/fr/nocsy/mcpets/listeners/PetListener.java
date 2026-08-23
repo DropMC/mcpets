@@ -153,9 +153,11 @@ public class PetListener implements Listener {
         List<String> activePetIds = new ArrayList<>();
         Map<String, String> activeSkinIds = new HashMap<>();
 
-        // Create a copy to avoid ConcurrentModificationException when despawning modifies the list
-        List<Pet> pets = Pet.getActivePetsForOwner(uuid);
-        for (Pet pet : new ArrayList<>(pets)) {
+        // Snapshot the list, because getActivePetsForOwner hands out the live one and despawning
+        // empties it. Iterating it directly is a ConcurrentModificationException, and reading it
+        // after the loop reports that the player had no pets no matter what they had.
+        List<Pet> pets = new ArrayList<>(Pet.getActivePetsForOwner(uuid));
+        for (Pet pet : pets) {
             // Capture skin data before despawn clears it
             PetSkin activeSkin = pet.getActiveSkin();
             pet.despawn(PetDespawnReason.DISCONNECTION);
