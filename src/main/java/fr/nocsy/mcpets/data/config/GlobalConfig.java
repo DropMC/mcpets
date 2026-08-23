@@ -123,6 +123,23 @@ public class GlobalConfig extends AbstractConfig {
     @Getter
     private int velocitySwitchWindow;
 
+    /**
+     * Bumped when a shipped default changes in a way an existing config.yml has to pick up. Only the keys named in
+     * {@link #migrate()} are touched: unlike language.yml this file also holds real operator settings, and a
+     * wholesale rewrite would throw them away.
+     */
+    private static final int CONFIG_VERSION = 1;
+
+    private static final String VERSION_KEY = "config_version";
+
+    private static final String DEFAULT_NAME = "<blue>Pet de %player%";
+
+    /** Values of DefaultName this fork has shipped before, plus upstream's. Anything else is an operator's choice. */
+    private static final List<String> SUPERSEDED_DEFAULT_NAMES = List.of(
+            "\u00a79Pet of %player%",
+            "&9Pet of %player%",
+            "<blue>Bichinho de %player%");
+
     public static GlobalConfig getInstance() {
         if (instance == null)
             instance = new GlobalConfig();
@@ -133,11 +150,13 @@ public class GlobalConfig extends AbstractConfig {
     public void init() {
         super.init("", "config.yml");
 
+        migrate();
+
         // Prefix is deliberately gone: chat lines are framed by core's MessageAPI now. The key is cleared so an
         // existing config.yml does not keep advertising the plugin name from a setting nothing reads.
         getConfig().set("Prefix", null);
         if (getConfig().get("DefaultName") == null)
-            getConfig().set("DefaultName", "<blue>Bichinho de %player%");
+            getConfig().set("DefaultName", DEFAULT_NAME);
         if (getConfig().get("OverrideDefaultName") == null)
             getConfig().set("OverrideDefaultName", true);
         if (getConfig().get("EnableClickBackToMenu") == null)
@@ -233,8 +252,27 @@ public class GlobalConfig extends AbstractConfig {
         if (getConfig().get("Velocity.SwitchWindow") == null)
             getConfig().set("Velocity.SwitchWindow", 60);
 
+        getConfig().set(VERSION_KEY, CONFIG_VERSION);
         save();
         reload();
+    }
+
+    /**
+     * Brings a config.yml written by an older build up to date. Every other key here is only ever written when it is
+     * absent, so without this a server that ran the plugin before the fork keeps the old value forever.
+     */
+    private void migrate() {
+        if (getConfig().getInt(VERSION_KEY, 0) >= CONFIG_VERSION)
+            return;
+
+        // The name every unnamed pet carries. Replaced only while it still holds a value we shipped, because an
+        // operator who picked their own name should keep it.
+        String defaultName = getConfig().getString("DefaultName");
+        if (defaultName == null || SUPERSEDED_DEFAULT_NAMES.contains(defaultName))
+            getConfig().set("DefaultName", DEFAULT_NAME);
+
+        // 4.2.1 fixed the spelling of MaxNameLength. The misspelled key lingers in older files and nothing reads it.
+        getConfig().set("MaxNameLenght", null);
     }
 
     @Override
