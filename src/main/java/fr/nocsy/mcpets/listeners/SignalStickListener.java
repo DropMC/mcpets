@@ -71,6 +71,10 @@ public class SignalStickListener implements Listener {
         final Pet pet = Pet.fromOwner(p.getUniqueId());
         if (pet == null || !pet.isStillHere()) return false;
 
+        // A pet with no order to answer to leaves the stick an ordinary item: the companion pets have no
+        // skill at all, and swallowing their owner's every right click would be the only thing the stick did.
+        if (pet.getSignals().isEmpty()) return false;
+
         // Refused before the skill runs, not after: cancelling the damage it deals would still leave the
         // knockback, the stuns and the particles going off in a place where none of that belongs.
         if (!PetProtection.mayFight(p)) {
