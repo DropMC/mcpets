@@ -37,16 +37,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 @Command(name = "pet", aliases = {"pets", "bicho"})
-@Permission(PPermission.USE_NODE)
 public class PetCommand {
 
     @Execute
+    @Permission(PPermission.USE_NODE)
     @Description("Abre o menu dos seus pets.")
     public void menu(final @Context Player player) {
         new PetMenu(player, 0).open(player);
     }
 
     @Execute(name = "menu")
+    @Permission(PPermission.MENU_NODE)
     @Description("Abre as ações do seu pet ativo.")
     public void actions(final @Context Player player, final @OptionalArg("pet") Pet pet) {
         final Pet active = resolveActive(player, pet, false);
@@ -58,6 +59,7 @@ public class PetCommand {
     }
 
     @Execute(name = "categoria")
+    @Permission(PPermission.CATEGORY_NODE)
     @Description("Abre uma categoria de pets.")
     public void category(final @Context CommandSender sender,
                          final @Arg("categoria") Category category,
@@ -77,6 +79,7 @@ public class PetCommand {
     }
 
     @Execute(name = "nome")
+    @Permission(PPermission.NAME_NODE)
     @Description("Pede no chat um novo nome para o seu pet ativo.")
     public void renamePrompt(final @Context Player player) {
         final Pet pet = renameable(player);
@@ -89,6 +92,7 @@ public class PetCommand {
     }
 
     @Execute(name = "nome")
+    @Permission(PPermission.NAME_NODE)
     @Description("Renomeia o seu pet ativo.")
     public void rename(final @Context Player player, final @Join("nome") String name) {
         final Pet pet = renameable(player);
@@ -118,6 +122,7 @@ public class PetCommand {
     }
 
     @Execute(name = "montar")
+    @Permission(PPermission.RIDE_NODE)
     @Description("Monta no seu pet ativo.")
     public void mount(final @Context Player player) {
         final Pet pet = resolveActive(player, null, false);
@@ -129,6 +134,7 @@ public class PetCommand {
     }
 
     @Execute(name = "guardar")
+    @Permission(PPermission.DISMISS_NODE)
     @Description("Guarda o seu pet ativo.")
     public void dismiss(final @Context CommandSender sender, final @OptionalArg("jogador") Player target) {
         if (target != null && !sender.hasPermission(PPermission.ADMIN_OTHERS.getPermission())) {

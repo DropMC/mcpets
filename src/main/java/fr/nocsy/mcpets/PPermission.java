@@ -20,6 +20,14 @@ public enum PPermission {
 
     public static final String USE_NODE = Brand.PERMISSION_PREFIX + ".commands.pet";
     public static final String MOUNT_NODE = Brand.PERMISSION_PREFIX + ".commands.montaria";
+
+    // One node per player subcommand, so a rank can be given the menu without the rest, or the
+    // other way round. The root node does not imply any of them.
+    public static final String MENU_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.menu";
+    public static final String CATEGORY_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.categoria";
+    public static final String NAME_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.nome";
+    public static final String RIDE_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.montar";
+    public static final String DISMISS_NODE = Brand.PERMISSION_PREFIX + ".commands.pet.guardar";
     public static final String COLOR_NODE = Brand.PERMISSION_PREFIX + ".pet.color";
 
     // One node per staff verb, so the generated help lists only what the reader can actually run.
