@@ -4,6 +4,7 @@ import fr.nocsy.mcpets.PPermission;
 import fr.nocsy.mcpets.commands.AArgument;
 import fr.nocsy.mcpets.commands.CCommand;
 import fr.nocsy.mcpets.commands.tabcompleters.MCPetsCommandTabCompleter;
+import fr.nocsy.mcpets.data.config.FormatArg;
 import fr.nocsy.mcpets.data.config.Language;
 import fr.nocsy.mcpets.data.inventories.PetMenu;
 import org.bukkit.command.Command;
@@ -72,7 +73,8 @@ public class MCPetsCommand implements CCommand {
             for(AArgument argument : outcomes) {
                 if(argument.nameMatchesButIncomplete()) {
                     if (argument.getUsage() != null) {
-                        sender.sendMessage("§cMissing arguments. Usage: §e" + argument.getUsage());
+                        Language.MISSING_ARGUMENTS.sendMessageFormatted(sender,
+                                new FormatArg("%usage%", argument.getUsage()));
                     } else {
                         Language.USAGE.sendMessage(sender);
                     }

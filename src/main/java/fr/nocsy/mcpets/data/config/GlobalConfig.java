@@ -18,8 +18,6 @@ public class GlobalConfig extends AbstractConfig {
     private boolean worldGuardSupport = true;
 
     @Getter
-    private String prefix;
-    @Getter
     private String defaultName;
     @Getter
     private boolean overrideDefaultName;
@@ -135,10 +133,11 @@ public class GlobalConfig extends AbstractConfig {
     public void init() {
         super.init("", "config.yml");
 
-        if (getConfig().get("Prefix") == null)
-            getConfig().set("Prefix", "§8[§6MCPets§8] » ");
+        // Prefix is deliberately gone: chat lines are framed by core's MessageAPI now. The key is cleared so an
+        // existing config.yml does not keep advertising the plugin name from a setting nothing reads.
+        getConfig().set("Prefix", null);
         if (getConfig().get("DefaultName") == null)
-            getConfig().set("DefaultName", "§9Pet of %player%");
+            getConfig().set("DefaultName", "<blue>Bichinho de %player%");
         if (getConfig().get("OverrideDefaultName") == null)
             getConfig().set("OverrideDefaultName", true);
         if (getConfig().get("EnableClickBackToMenu") == null)
@@ -247,7 +246,6 @@ public class GlobalConfig extends AbstractConfig {
     public void reload() {
         loadConfig();
 
-        prefix = getConfig().getString("Prefix");
         defaultName = getConfig().getString("DefaultName");
         overrideDefaultName = getConfig().getBoolean("OverrideDefaultName");
         useDefaultMythicMobNames = getConfig().getBoolean("UseDefaultMythicMobsNames");
