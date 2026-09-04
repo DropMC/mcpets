@@ -13,6 +13,7 @@ public enum PetDespawnReason {
     RELOAD("reload"),
     FLAG("flag"),
     GAMEMODE("gamemode"),
+    VANISH("owner vanished"),
     MYTHICMOBS("mythicmobs"),
     SPAWN_ISSUE("spawn issue"),
     LOOP_SPAWN("loop spawn"),

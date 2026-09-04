@@ -418,6 +418,20 @@ public class PetListener implements Listener {
         }
     }
 
+    /**
+     * A vanished owner gets no pet. The AI track despawns one that is already out, and this stops a
+     * new one from being summoned in the meantime, which would otherwise draw an arrow pointing at
+     * a player who is meant to be invisible.
+     */
+    @EventHandler
+    public void vanishedOwner(PetSpawnEvent e) {
+        Player p = Bukkit.getPlayer(e.getPet().getOwner());
+        if (!Pet.isVanished(p)) return;
+
+        e.setCancelled(true);
+        Debugger.send("§cSpawn of §6" + e.getPet().getId() + "§c cancelled: the owner is vanished.");
+    }
+
     @EventHandler
     public void cancelDefaultTaming(EntityTameEvent e) {
         if (Pet.getFromEntity(e.getEntity()) == null) return;

@@ -55,6 +55,9 @@ import fr.nocsy.mcpets.modeler.bone.AbstractNameTag;
 
 public class Pet {
 
+    /** Bukkit metadata key the network's own vanish sets on a hidden player. See {@link #isVanished(Player)}. */
+    private static final String VANISH_METADATA = "vanished";
+
     //---------------------------------------------------------------------
     public static final int BLOCKED = 2;
     public static final int MOB_SPAWN = 0;
@@ -989,6 +992,14 @@ public class Pet {
                     return;
                 }
 
+                if (isVanished(p)) {
+                    Debugger.send("§6[AiManager] : §cPet " + getId() + " despawned because the owner is vanished");
+                    VanishedPets.stash(owner, getId());
+                    getInstance().despawn(PetDespawnReason.VANISH);
+                    stopAI();
+                    return;
+                }
+
                 final Location petLocation = p.getLocation();
                 final Location ownerLoc = petLocation;
                 final Location petLoc = getInstance().getActiveMob().getEntity().getBukkitEntity().getLocation();
@@ -1181,6 +1192,18 @@ public class Pet {
         Debugger.send("§7teleporting pet " + id + " to player " + p.getName());
         if (isStillHere())
             this.teleport(loc);
+    }
+
+    /**
+     * Say whether the server has marked this player as vanished, in which case their pet must not
+     * stand around advertising where they are.
+     *
+     * The network's vanish is its own plugin and publishes nothing but the Bukkit metadata key
+     * "vanished", the same one TAB reads to keep a vanished player out of the tab list. Reading it
+     * here keeps MCPets free of any dependency on that plugin.
+     */
+    public static boolean isVanished(Player player) {
+        return player != null && player.hasMetadata(VANISH_METADATA);
     }
 
     /**

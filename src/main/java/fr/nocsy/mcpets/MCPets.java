@@ -27,6 +27,7 @@ import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.skills.CustomComponentRegistry;
 
 import fr.nocsy.mcpets.data.Pet;
+import fr.nocsy.mcpets.data.VanishedPets;
 import fr.nocsy.mcpets.data.PetSkin;
 import fr.nocsy.mcpets.data.sql.Databases;
 import fr.nocsy.mcpets.data.sql.PlayerData;
@@ -171,6 +172,7 @@ public class MCPets extends JavaPlugin {
             getLog().info("-=-=-=-= -=-=-=-=-=-=- =-=-=-=-");
 
             FlagsManager.launchFlags();
+            VanishedPets.start(this);
         });
     }
 
