@@ -8,9 +8,11 @@ import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
+import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.config.GlobalConfig;
 
 /**
@@ -24,6 +26,11 @@ import fr.nocsy.mcpets.data.config.GlobalConfig;
 public final class PetProtection {
 
     private PetProtection() {}
+
+    /** The pet's owner if they are online, which is who every protection question is asked about. */
+    public static Player owner(final Pet pet) {
+        return pet.getOwner() == null ? null : Bukkit.getPlayer(pet.getOwner());
+    }
 
     /**
      * Whether {@code owner} would be allowed to hit {@code victim} where it stands. WorldGuard runs the

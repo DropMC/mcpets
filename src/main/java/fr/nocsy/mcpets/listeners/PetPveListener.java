@@ -4,7 +4,6 @@ import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.utils.PetDamage;
 import fr.nocsy.mcpets.utils.PetProtection;
 import gg.dropmc.survival.core.util.DamageUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
@@ -20,6 +19,10 @@ import org.bukkit.event.entity.EntityTargetEvent;
  * The rule is enforced on the damage event rather than on MCPets' own {@code petDamage} mechanic because the pets
  * installed here attack through MythicMobs' native {@code damage} mechanic, which never reaches that code. Enforcing
  * it here also covers whatever a future pet's skill file decides to do.
+ * <p>
+ * Cancelled damage is only half of it: a skill that reached a player still knocks them back, sets them on fire and
+ * hangs a wither on them. {@link fr.nocsy.mcpets.mythicmobs.PetSkillTargetListener} is what keeps a player out of the
+ * target list in the first place, so none of that ever runs.
  */
 public class PetPveListener implements Listener {
 
@@ -44,7 +47,7 @@ public class PetPveListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void petDamagesOutOfBounds(EntityDamageByEntityEvent event) {
         Pet pet = PetDamage.behind(event);
-        if (pet == null || PetProtection.mayDamage(owner(pet), event.getEntity())) {
+        if (pet == null || PetProtection.mayDamage(PetProtection.owner(pet), event.getEntity())) {
             return;
         }
         event.setDamage(0);
@@ -74,14 +77,10 @@ public class PetPveListener implements Listener {
         if (pet == null) {
             return;
         }
-        if (isProtectedFromPets(event.getTarget()) || !PetProtection.mayDamage(owner(pet), event.getTarget())) {
+        Player owner = PetProtection.owner(pet);
+        if (isProtectedFromPets(event.getTarget()) || !PetProtection.mayDamage(owner, event.getTarget())) {
             event.setCancelled(true);
         }
-    }
-
-    /** The pet's owner if they are online, which is who every protection question is asked about. */
-    private static Player owner(Pet pet) {
-        return pet.getOwner() == null ? null : Bukkit.getPlayer(pet.getOwner());
     }
 
     /**

@@ -1,6 +1,7 @@
 package fr.nocsy.mcpets.listeners;
 
 import fr.nocsy.mcpets.mythicmobs.MythicListener;
+import fr.nocsy.mcpets.mythicmobs.PetSkillTargetListener;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -28,6 +29,7 @@ public class EventListener implements Listener {
         listeners.add(new PetDamageAttributionListener());
 
         listeners.add(new MythicListener());
+        listeners.add(new PetSkillTargetListener());
 
 
         listeners.add(new DatabaseRefreshListener());
