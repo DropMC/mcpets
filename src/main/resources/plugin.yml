@@ -19,7 +19,6 @@ softdepend:
   - WorldGuard
   - LuckPerms
   - PlaceholderAPI
-  - ItemsAdder
 loadbefore: []
 
 # Plugin messaging channel "mcpets:sync" is registered in code via Bukkit.getMessenger()

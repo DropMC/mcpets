@@ -57,7 +57,6 @@ public class MCPets extends JavaPlugin {
 
     private static MythicBukkit mythicMobs;
     private static LuckPerms luckPerms;
-    private static boolean itemsAdderFound = false;
     private static boolean luckPermsNotFound = false;
     private static boolean nexoFound = false;
     private static boolean nexoChecked = false;
@@ -113,7 +112,6 @@ public class MCPets extends JavaPlugin {
         instance = this;
 
         // Reset static flags for PlugMan reload support
-        itemsAdderFound = false;
         nexoFound = false;
         nexoChecked = false;
         luckPermsNotFound = false;
@@ -132,10 +130,8 @@ public class MCPets extends JavaPlugin {
         checkWorldGuard();
         checkLuckPerms();
         checkPlaceholderApi();
-        checkNexo();
-        checkItemsAdder();
-        if (!nexoFound && !itemsAdderFound) {
-            getLog().info("Neither Nexo nor ItemsAdder were found. Custom items features won't be available.");
+        if (!checkNexo()) {
+            getLog().info("Nexo was not found. Custom items features won't be available.");
         }
 
         try {
@@ -300,15 +296,6 @@ public class MCPets extends JavaPlugin {
         return nexoFound;
     }
 
-    private static void checkItemsAdder() {
-        try {
-            Class.forName("dev.lone.itemsadder.api.CustomStack");
-            itemsAdderFound = true;
-        } catch (final ClassNotFoundException e) {
-            itemsAdderFound = false;
-        }
-    }
-
     /**
      * Check and initialize WorldGuard instance
      */
@@ -397,13 +384,6 @@ public class MCPets extends JavaPlugin {
         if (luckPerms == null) checkLuckPerms();
 
         return luckPerms;
-    }
-
-    /**
-     * Check ItemsAdder is loaded or not
-     */
-    public static boolean isItemsAdderLoaded() {
-        return itemsAdderFound;
     }
 
     public static Logger getLog() {
