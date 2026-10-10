@@ -9,6 +9,7 @@ import java.util.Map;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import org.bukkit.Sound;
@@ -18,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 import dev.triumphteam.gui.guis.GuiItem;
 
-import gg.dropmc.survival.core.api.adventure.AdventureUtils;
 import gg.dropmc.survival.core.api.gui.GuiItems;
 import gg.dropmc.survival.core.api.gui.MenuBuilder;
 import gg.dropmc.survival.core.api.gui.PageLayout;
@@ -77,14 +77,14 @@ public class PetsMenu extends PaginatedMenu<PetsMenu.Entry> {
     protected @NotNull List<Component> info() {
         if (!player.equals(owner)) {
             return List.of(
-                    AdventureUtils.parse("<!i><gray>Catálogo de pets de <white>" + owner.getName() + "<gray>."),
-                    AdventureUtils.parse("<!i><gray>Os pets liberados aparecem primeiro."));
+                    MiniMessage.miniMessage().deserialize("<!i><gray>Catálogo de pets de <white>" + owner.getName() + "<gray>."),
+                    MiniMessage.miniMessage().deserialize("<!i><gray>Os pets liberados aparecem primeiro."));
         }
 
         return List.of(
-                AdventureUtils.parse("<!i><gray>Clique num pet para invocá-lo."),
-                AdventureUtils.parse("<!i><gray>Os pets que você já tem aparecem primeiro."),
-                AdventureUtils.parse("<!i><gray>Use <white>/pet menu<gray> para as ações do pet ativo."));
+                MiniMessage.miniMessage().deserialize("<!i><gray>Clique num pet para invocá-lo."),
+                MiniMessage.miniMessage().deserialize("<!i><gray>Os pets que você já tem aparecem primeiro."),
+                MiniMessage.miniMessage().deserialize("<!i><gray>Use <white>/pet menu<gray> para as ações do pet ativo."));
     }
 
     @Override

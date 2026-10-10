@@ -5,12 +5,12 @@ import java.util.List;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import gg.dropmc.survival.core.api.adventure.AdventureUtils;
 import gg.dropmc.survival.core.api.gui.AbstractMenu;
 import gg.dropmc.survival.core.api.gui.GuiItems;
 import gg.dropmc.survival.core.api.gui.Menu;
@@ -64,10 +64,10 @@ public class PetActionMenu extends AbstractMenu {
     @Override
     protected @NotNull List<Component> info() {
         return List.of(
-                AdventureUtils.parse("<!i><gray>Ações do pet que você tem ativo."),
-                AdventureUtils.parse("<!i><gray>Com ele fora, segure um <white>graveto<gray> para"),
-                AdventureUtils.parse("<!i><gray>dar ordens: <white>direito<gray> usa a habilidade,"),
-                AdventureUtils.parse("<!i><gray>e <white>esquerdo<gray> troca a ordem ativa."));
+                MiniMessage.miniMessage().deserialize("<!i><gray>Ações do pet que você tem ativo."),
+                MiniMessage.miniMessage().deserialize("<!i><gray>Com ele fora, segure um <white>graveto<gray> para"),
+                MiniMessage.miniMessage().deserialize("<!i><gray>dar ordens: <white>direito<gray> usa a habilidade,"),
+                MiniMessage.miniMessage().deserialize("<!i><gray>e <white>esquerdo<gray> troca a ordem ativa."));
     }
 
     @Override
