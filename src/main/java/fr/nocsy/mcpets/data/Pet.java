@@ -20,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.event.entity.EntityMountEvent;
 
 import io.lumine.mythic.api.skills.Skill;
@@ -323,12 +324,14 @@ public class Pet {
      * Get the pet from the specified entity
      */
     public static Pet getFromEntity(final Entity ent) {
-        if (ent != null &&
-                ent.hasMetadata("AlmPet") &&
-                !ent.getMetadata("AlmPet").isEmpty() &&
-                ent.getMetadata("AlmPet").getFirst() != null &&
-                ent.getMetadata("AlmPet").getFirst().value() != null) {
-            return (Pet) ent.getMetadata("AlmPet").getFirst().value();
+        if (ent == null) {
+            return null;
+        }
+        // Read once: MythicMobs asks from its own threads while a despawn empties the list.
+        for (final MetadataValue value : ent.getMetadata("AlmPet")) {
+            if (value != null && value.value() instanceof Pet pet) {
+                return pet;
+            }
         }
         return null;
     }
