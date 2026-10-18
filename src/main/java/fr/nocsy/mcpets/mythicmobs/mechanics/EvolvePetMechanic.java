@@ -2,8 +2,8 @@ package fr.nocsy.mcpets.mythicmobs.mechanics;
 
 import org.bukkit.entity.Entity;
 
-import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.Pet;
+import fr.nocsy.mcpets.utils.Tasks;
 import fr.nocsy.mcpets.utils.debug.Debugger;
 
 import io.lumine.mythic.bukkit.BukkitAdapter;
@@ -48,13 +48,10 @@ public class EvolvePetMechanic extends SkillMechanic implements ITargetedEntityS
         Debugger.send("§7- evolution: §a" + evolutionId + " exists ? §a" + (evolution != null));
 
         if (evolution != null && pet != null && pet.getPetStats() != null) {
-            entity.getScheduler().run(
-                    MCPets.getInstance(),
-                    t -> pet.getPetStats()
-                            .getCurrentLevel()
-                            .evolveTo(pet.getOwner(), forceEvolution, evolution),
-                    null
-            );
+            // Next tick even if the caster is gone by then: the evolution needs only the pet's stats and owner.
+            Tasks.forPet(pet, () -> pet.getPetStats()
+                    .getCurrentLevel()
+                    .evolveTo(pet.getOwner(), forceEvolution, evolution));
 
             return SkillResult.SUCCESS;
         }
