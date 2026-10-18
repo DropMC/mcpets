@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.Pet;
+import fr.nocsy.mcpets.utils.Tasks;
 import fr.nocsy.mcpets.utils.Utils;
 import fr.nocsy.mcpets.utils.PetTimer;
 import fr.nocsy.mcpets.data.sql.Databases;
@@ -114,7 +115,7 @@ public class PetStats {
                 Player p = Bukkit.getPlayer(pet.getOwner());
                 if (p != null && Pet.getActivePets().get(pet.getOwner()) == null) {
                     // The timer ends on the global region; the spawn happens where the owner stands.
-                    p.getScheduler().run(MCPets.getInstance(), t -> {
+                    Tasks.onEntity(p, () -> {
                         if (Pet.getActivePets().get(pet.getOwner()) == null) {
                             pet.spawn(p.getLocation(), true);
                             Debugger.send("§aPet §6" + pet.getId() + "§a was autorespawned after death.");

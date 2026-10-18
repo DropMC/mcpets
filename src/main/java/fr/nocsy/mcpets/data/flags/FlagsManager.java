@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.Pet;
+import fr.nocsy.mcpets.utils.Tasks;
 
 public class FlagsManager {
 
@@ -72,7 +73,7 @@ public class FlagsManager {
                 final Player p = Bukkit.getPlayer(owner);
                 if (p == null) continue;
 
-                p.getScheduler().run(MCPets.getInstance(), t2 -> {
+                Tasks.onEntity(p, () -> {
                     for (final StoppableFlag flag : launched) {
                         flag.check(owner, p);
                     }

@@ -1,6 +1,7 @@
 package fr.nocsy.mcpets.data;
 
 import fr.nocsy.mcpets.MCPets;
+import fr.nocsy.mcpets.utils.Tasks;
 import fr.nocsy.mcpets.utils.debug.Debugger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -66,7 +67,7 @@ public class VanishedPets {
             }
 
             // The vanish state and the spawn belong to the owner's region.
-            player.getScheduler().run(MCPets.getInstance(), t -> {
+            Tasks.onEntity(player, () -> {
                 if (Pet.isVanished(player)) return;
 
                 final Set<String> petIds = STASHED.remove(owner);
