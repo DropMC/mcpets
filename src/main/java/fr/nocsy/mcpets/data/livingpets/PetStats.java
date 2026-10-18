@@ -524,7 +524,15 @@ public class PetStats {
     /**
      * Save all pet stats asynchronously on a regular time period
      */
-    public static void saveStats() {
+    // The running autosave, replaced on every /pet reload instead of piling up another one.
+    private static ScheduledTask autoSaveTask;
+
+    public static synchronized void saveStats() {
+        if (autoSaveTask != null) {
+            autoSaveTask.cancel();
+            autoSaveTask = null;
+        }
+
         // Get the auto save delay (in seconds) and transform it into ticks
         long delay = (long) GlobalConfig.getInstance().getAutoSave() * 20;
 
@@ -534,7 +542,7 @@ public class PetStats {
         // Runs Async if it's a SQL, sync if not coz YAML doesn't support Async
         if (GlobalConfig.getInstance().isDatabaseSupport()) {
             // TODO: For now, we make the AutoSave only saving the connected players for MySQL users
-            Bukkit.getAsyncScheduler().runAtFixedRate(MCPets.getInstance(), t -> {
+            autoSaveTask = Bukkit.getAsyncScheduler().runAtFixedRate(MCPets.getInstance(), t -> {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     Databases.savePlayerData(p.getUniqueId());
                 }
@@ -542,7 +550,7 @@ public class PetStats {
             return;
         }
 
-        Bukkit.getGlobalRegionScheduler().runAtFixedRate(MCPets.getInstance(), t ->
+        autoSaveTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(MCPets.getInstance(), t ->
                 new ArrayList<>(petStatsList).forEach(PetStats::save), delay, delay);
     }
 
