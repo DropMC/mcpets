@@ -348,7 +348,7 @@ public class PetListener implements Listener {
     /**
      * Handle random despawn
      */
-    private final Map<UUID, Integer> repeatRespawn = new HashMap<>();
+    private static final Map<UUID, Integer> repeatRespawn = new ConcurrentHashMap<>();
     @EventHandler
     public void despawn(MythicMobDespawnEvent e) {
         if (e.getEntity() == null) return;
@@ -359,27 +359,44 @@ public class PetListener implements Listener {
 
         pet.despawn(PetDespawnReason.MYTHICMOBS);
 
+        respawnAtOwner(pet);
+    }
+
+    /**
+     * Bring back a pet that was despawned under its owner (MythicMobs despawn, or its entity removed under the AI),
+     * unless it already came back twice within the last 10 ticks for that owner.
+     */
+    public static void respawnAtOwner(final Pet pet) {
         UUID ownerUUID = pet.getOwner();
         if (ownerUUID == null) return;
 
-        Player owner = Bukkit.getPlayer(pet.getOwner());
+        Player owner = Bukkit.getPlayer(ownerUUID);
         if (owner == null) return;
-        if (repeatRespawn.containsKey(ownerUUID) && repeatRespawn.get(ownerUUID) == 3) {
+
+        final boolean[] capped = {false};
+        repeatRespawn.compute(ownerUUID, (uuid, value) -> {
+            if (value != null && value == 3) {
+                capped[0] = true;
+                return null;
+            }
+            return (value == null ? 1 : value) + 1;
+        });
+        if (capped[0]) {
             Language.REVOKED_UNKNOWN.sendMessage(owner);
-            repeatRespawn.remove(owner.getUniqueId());
             return;
         }
-        int value = 1;
-        if (repeatRespawn.containsKey(ownerUUID)) value = repeatRespawn.get(ownerUUID);
-        pet.spawn(owner, owner.getLocation());
-        pet.setRecurrent_spawn(false);
-        repeatRespawn.put(owner.getUniqueId(), value + 1);
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                repeatRespawn.remove(owner.getUniqueId());
-            }
-        }.runTaskLater(MCPets.getInstance(), 10L);
+
+        // The pet spawns where the owner stands, so on the owner's thread.
+        if (Bukkit.isOwnedByCurrentRegion(owner)) {
+            pet.spawn(owner, owner.getLocation());
+            pet.setRecurrent_spawn(false);
+        } else {
+            owner.getScheduler().run(MCPets.getInstance(), t -> {
+                pet.spawn(owner, owner.getLocation());
+                pet.setRecurrent_spawn(false);
+            }, null);
+        }
+        Bukkit.getGlobalRegionScheduler().runDelayed(MCPets.getInstance(), t -> repeatRespawn.remove(ownerUUID), 10L);
     }
 
     /**
