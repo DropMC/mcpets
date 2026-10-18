@@ -1,6 +1,8 @@
 package fr.nocsy.mcpets.data;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 
 import lombok.Getter;
@@ -73,14 +75,14 @@ public class Pet {
     //********** Static values **********
 
     @Getter
-    private static Map<UUID, List<Pet>> activePets = new HashMap<>();
+    private static Map<UUID, List<Pet>> activePets = new ConcurrentHashMap<>();
     @Getter
-    private static List<Pet> objectPets = new ArrayList<>();
+    private static List<Pet> objectPets = new CopyOnWriteArrayList<>();
     @Getter
-    private static Map<UUID, HashMap<String, PetSkin>> activeSkinsMap = new HashMap<>();
+    private static Map<UUID, Map<String, PetSkin>> activeSkinsMap = new ConcurrentHashMap<>();
 
     // Prevent race conditions during spawn
-    private static Set<String> spawningPets = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private static Set<String> spawningPets = ConcurrentHashMap.newKeySet();
 
     //********** Global Pet **********
 
@@ -186,11 +188,11 @@ public class Pet {
 
     @Getter
     // Indicates the taming progress (between 0 and 1)
-    private double tamingProgress = 0;
+    private volatile double tamingProgress = 0;
 
     @Getter
     // The active mob representing the pet instance
-    private ActiveMob activeMob;
+    private volatile ActiveMob activeMob;
 
     @Getter
     // Is the pet invulnerable ?
@@ -199,7 +201,7 @@ public class Pet {
     @Getter
     @Setter
     // Was the pet removed ?
-    private boolean removed;
+    private volatile boolean removed;
 
     @Getter
     @Setter
@@ -214,11 +216,11 @@ public class Pet {
     @Getter
     @Setter
     // Should it follow the owner ?
-    private boolean followOwner;
+    private volatile boolean followOwner;
 
     // Debug variables
     @Setter
-    private boolean recurrent_spawn = false;
+    private volatile boolean recurrent_spawn = false;
 
     // AI variable
     private int task = 0;
@@ -240,12 +242,7 @@ public class Pet {
      */
     public void setActiveSkin(final PetSkin skin) {
         if (owner != null) {
-            HashMap<String, PetSkin> ownerPetSkins = activeSkinsMap.get(owner);
-            if (ownerPetSkins == null)
-                ownerPetSkins = new HashMap<String, PetSkin>();
-
-            ownerPetSkins.put(id, skin);
-            activeSkinsMap.put(owner, ownerPetSkins);
+            activeSkinsMap.computeIfAbsent(owner, k -> new ConcurrentHashMap<>()).put(id, skin);
         }
     }
 
@@ -254,7 +251,7 @@ public class Pet {
      */
     public PetSkin getActiveSkin() {
         if (owner != null) {
-            final HashMap<String, PetSkin> ownerPetSkins = activeSkinsMap.get(owner);
+            final Map<String, PetSkin> ownerPetSkins = activeSkinsMap.get(owner);
             if (ownerPetSkins != null) {
                 return ownerPetSkins.get(id);
             }
@@ -343,6 +340,7 @@ public class Pet {
      */
     @Deprecated
     public static Pet fromOwner(final UUID owner) {
+        if (owner == null) return null;
         final List<Pet> pets = Pet.getActivePets().get(owner);
         return (pets != null && !pets.isEmpty()) ? pets.getFirst() : null;
     }
@@ -351,27 +349,26 @@ public class Pet {
      * Get all active pets for a player
      */
     public static List<Pet> getActivePetsForOwner(final UUID owner) {
-        return Pet.getActivePets().getOrDefault(owner, new ArrayList<>());
+        if (owner == null) return List.of();
+        return Pet.getActivePets().getOrDefault(owner, List.of());
     }
 
     /**
      * Add a pet to a player's active pets list
      */
     public static void addActivePet(final UUID owner, final Pet pet) {
-        activePets.computeIfAbsent(owner, k -> new ArrayList<>()).add(pet);
+        activePets.computeIfAbsent(owner, k -> new CopyOnWriteArrayList<>()).add(pet);
     }
 
     /**
      * Remove a pet from a player's active pets list
      */
     public static void removeActivePet(final UUID owner, final Pet pet) {
-        final List<Pet> pets = activePets.get(owner);
-        if (pets != null) {
+        if (owner == null) return;
+        activePets.computeIfPresent(owner, (k, pets) -> {
             pets.remove(pet);
-            if (pets.isEmpty()) {
-                activePets.remove(owner);
-            }
-        }
+            return pets.isEmpty() ? null : pets;
+        });
     }
 
     /**

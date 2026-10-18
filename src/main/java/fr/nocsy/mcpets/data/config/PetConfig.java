@@ -1,6 +1,7 @@
 package fr.nocsy.mcpets.data.config;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.io.File;
 import javax.annotation.Nullable;
 
@@ -30,7 +31,7 @@ import fr.nocsy.mcpets.data.livingpets.PetLevel;
 
 public class PetConfig extends AbstractConfig {
 
-    private static Map<String, PetConfig> petConfigMapping = new HashMap<>();
+    private static Map<String, PetConfig> petConfigMapping = new ConcurrentHashMap<>();
 
     public static String getFilePath(final String petId) {
         final PetConfig config = getConfig(petId);
@@ -39,6 +40,7 @@ public class PetConfig extends AbstractConfig {
     }
 
     public static PetConfig getConfig(final String petId) {
+        if (petId == null) return null;
         return petConfigMapping.get(petId);
     }
 

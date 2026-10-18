@@ -4,12 +4,13 @@ import fr.nocsy.mcpets.MCPets;
 import io.lumine.mythic.api.adapters.AbstractEntity;
 import io.lumine.mythic.api.adapters.AbstractLocation;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PathFindingUtils {
 
-    private static HashMap<UUID, AbstractLocation> registry = new HashMap<>();
+    private static final Map<UUID, AbstractLocation> registry = new ConcurrentHashMap<>();
 
     /**
      * Move the entity to the specified location

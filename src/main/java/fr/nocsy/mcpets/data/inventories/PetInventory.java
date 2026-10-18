@@ -18,13 +18,14 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PetInventory {
 
     @Getter
-    private static HashMap<UUID, HashMap<String, PetInventory>> petInventories = new HashMap<>();
+    private static Map<UUID, Map<String, PetInventory>> petInventories = new ConcurrentHashMap<>();
 
     @Getter
     private Inventory inventory;
@@ -55,16 +56,7 @@ public class PetInventory {
             }
         }
 
-        HashMap<String, PetInventory> builtIn = petInventories.get(pet.getOwner());
-        if (builtIn == null) {
-            HashMap<String, PetInventory> map = new HashMap<>();
-            map.put(pet.getId(), this);
-            petInventories.put(pet.getOwner(), map);
-        }
-        else {
-            builtIn.put(pet.getId(), this);
-            petInventories.put(pet.getOwner(), builtIn);
-        }
+        petInventories.computeIfAbsent(pet.getOwner(), k -> new ConcurrentHashMap<>()).put(pet.getId(), this);
     }
 
     public static void removePlayer(UUID owner) {
@@ -88,7 +80,7 @@ public class PetInventory {
             return null;
         if (pet.getInventorySize() <= 0)
             return null;
-        HashMap<String, PetInventory> registeredMap = petInventories.get(pet.getOwner());
+        Map<String, PetInventory> registeredMap = petInventories.get(pet.getOwner());
         if (registeredMap != null
                 && registeredMap.get(pet.getId()) != null
                 && registeredMap.get(pet.getId()).getInventory().getSize() == pet.getInventorySize()) {
@@ -191,7 +183,7 @@ public class PetInventory {
             {
                 String petId = (String)p.getMetadata("MCPets;petInventory").getFirst().value();
                 UUID owner = p.getUniqueId();
-                HashMap<String, PetInventory> map = petInventories.get(owner);
+                Map<String, PetInventory> map = petInventories.get(owner);
                 if (map != null) {
                     return map.get(petId);
                 }

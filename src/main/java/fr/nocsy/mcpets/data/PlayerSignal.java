@@ -4,12 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerSignal {
 
-    private static final HashMap<UUID, SignalWrapper> orderMap = new HashMap<>();
+    private static final Map<UUID, SignalWrapper> orderMap = new ConcurrentHashMap<>();
 
     /**
      * Set the active signal for the player
@@ -36,8 +37,10 @@ public class PlayerSignal {
      * Get the active signal of the player
      */
     public static String getSignalTag(UUID owner) {
-        if (orderMap.containsKey(owner)) {
-            return orderMap.get(owner).getActiveSignal();
+        if (owner == null) return null;
+        final SignalWrapper wrapper = orderMap.get(owner);
+        if (wrapper != null) {
+            return wrapper.getActiveSignal();
         }
         return null;
     }
@@ -82,7 +85,9 @@ public class PlayerSignal {
     }
 
     public static String getNextSignal(UUID owner) {
-        if (orderMap.containsKey(owner)) {
+        if (owner == null) return null;
+        final SignalWrapper wrapper = orderMap.get(owner);
+        if (wrapper != null) {
             Pet pet = Pet.fromOwner(owner);
             if (pet == null)
                 return null;
@@ -90,7 +95,6 @@ public class PlayerSignal {
             if (pet.getSignals().isEmpty())
                 return null;
 
-            SignalWrapper wrapper = orderMap.get(owner);
             int newIndex = wrapper.getIndexSignal() + 1;
             if (pet.getSignals().size() <= newIndex)
                 newIndex = 0;

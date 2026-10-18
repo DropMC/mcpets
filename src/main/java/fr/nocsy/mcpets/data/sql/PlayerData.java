@@ -5,7 +5,7 @@ import fr.nocsy.mcpets.data.inventories.PetInventory;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -125,7 +125,7 @@ public class PlayerData {
             pdn.setLastActivePet(lastActivePet);
 
             mapOfRegisteredInventories.clear();
-            HashMap<String, PetInventory> inventories = PetInventory.getPetInventories().get(this.getUuid());
+            Map<String, PetInventory> inventories = PetInventory.getPetInventories().get(this.getUuid());
             if (inventories != null) {
                 for (String petId : inventories.keySet()) {
                     mapOfRegisteredInventories.put(petId, inventories.get(petId).serialize());

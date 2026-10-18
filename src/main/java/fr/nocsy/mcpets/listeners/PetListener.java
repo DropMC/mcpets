@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -48,7 +49,7 @@ import io.lumine.mythic.bukkit.events.MythicMobDespawnEvent;
 
 public class PetListener implements Listener {
 
-    private final Map<UUID, String> reconnectionPets = new HashMap<>();
+    private final Map<UUID, String> reconnectionPets = new ConcurrentHashMap<>();
 
     @EventHandler
     public void interact(PlayerInteractEntityEvent e) {

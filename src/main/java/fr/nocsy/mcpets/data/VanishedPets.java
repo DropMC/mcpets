@@ -39,7 +39,11 @@ public class VanishedPets {
 
     /** Records a pet taken away by vanish, so it can be summoned again afterwards. */
     public static void stash(final UUID owner, final String petId) {
-        STASHED.computeIfAbsent(owner, key -> new LinkedHashSet<>()).add(petId);
+        STASHED.compute(owner, (key, ids) -> {
+            if (ids == null) ids = new LinkedHashSet<>();
+            ids.add(petId);
+            return ids;
+        });
     }
 
     /**

@@ -2,7 +2,7 @@ package fr.nocsy.mcpets.utils.debug;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import fr.nocsy.mcpets.utils.Utils;
 
@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 public class Debugger {
 
     // list of the people listening to the debugger
-    private static final List<UUID> listeners = new ArrayList<>();
+    private static final List<UUID> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * Says whether the debugger is being listened to at the moment

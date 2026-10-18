@@ -3,6 +3,7 @@ package fr.nocsy.mcpets.data.livingpets;
 import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -406,7 +407,7 @@ public class PetStats {
 
     //------------ Static code -------------//
 
-    private static List<PetStats> petStatsList = new ArrayList<>();
+    private static List<PetStats> petStatsList = new CopyOnWriteArrayList<>();
 
     public static List<PetStats> getPetStats(UUID owner) {
         return petStatsList.stream()
@@ -490,7 +491,7 @@ public class PetStats {
     /**
      * Register a pet stats
      */
-    public static boolean register(PetStats petStats) {
+    public static synchronized boolean register(PetStats petStats) {
         // If there is no pet nor owner, we can not do the sanity check, so we don't register it
         if (petStats.getPet() == null || petStats.getPet().getOwner() == null) {
             return false;

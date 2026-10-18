@@ -2,8 +2,8 @@ package fr.nocsy.mcpets.data.livingpets;
 
 import java.util.Map;
 import java.util.List;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.Getter;
 
@@ -18,7 +18,7 @@ import fr.nocsy.mcpets.utils.debug.Debugger;
 
 public class PetFoodBuff {
 
-    public static Map<Pet, List<PetFoodBuff>> runningBuffs = new HashMap<>();
+    public static Map<Pet, List<PetFoodBuff>> runningBuffs = new ConcurrentHashMap<>();
 
     @Getter
     private PetFoodType type;

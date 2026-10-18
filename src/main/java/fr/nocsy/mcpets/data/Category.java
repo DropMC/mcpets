@@ -1,6 +1,8 @@
 package fr.nocsy.mcpets.data;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,9 +21,9 @@ import fr.nocsy.mcpets.utils.MenuPaginationHelper.PaginationConfig;
 public class Category {
 
     @Getter
-    private static List<Category> categories = new ArrayList<>();
+    private static List<Category> categories = new CopyOnWriteArrayList<>();
     @Getter
-    private static Map<UUID, Category> categoryView = new HashMap<>();
+    private static Map<UUID, Category> categoryView = new ConcurrentHashMap<>();
 
     @Getter
     private final String id;

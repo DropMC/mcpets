@@ -7,7 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class LanguageConfig extends AbstractConfig {
@@ -15,7 +16,7 @@ public class LanguageConfig extends AbstractConfig {
     public static LanguageConfig instance;
 
     @Getter
-    private final HashMap<String, String> map = new HashMap<>();
+    private final Map<String, String> map = new ConcurrentHashMap<>();
 
     public static LanguageConfig getInstance() {
         if (instance == null)

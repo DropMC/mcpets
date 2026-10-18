@@ -3,14 +3,15 @@ package fr.nocsy.mcpets.data.config;
 import fr.nocsy.mcpets.MCPets;
 import lombok.Getter;
 
-import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BlacklistConfig extends AbstractConfig {
 
     public static BlacklistConfig instance;
 
     @Getter
-    private final ArrayList<String> blackListedWords = new ArrayList<>();
+    private final List<String> blackListedWords = new CopyOnWriteArrayList<>();
 
     public static BlacklistConfig getInstance() {
         if (instance == null)

@@ -1,6 +1,7 @@
 package fr.nocsy.mcpets.data.livingpets;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.Getter;
 
@@ -27,7 +28,7 @@ import com.nexomc.nexo.items.ItemBuilder;
 
 public class PetFood {
 
-    private static final Map<String, PetFood> petFoodHashMap = new HashMap<>();
+    private static final Map<String, PetFood> petFoodHashMap = new ConcurrentHashMap<>();
 
 
     //----------------- Generic item section ------------------//
@@ -177,9 +178,12 @@ public class PetFood {
      * Register an owner in the waiting list so that they don't spam an item
      * and lose it unintentionally
      */
-    private final Set<UUID> waitingListApply = new HashSet<>();
+    private final Set<UUID> waitingListApply = ConcurrentHashMap.newKeySet();
+    // The concurrent set takes no null, and a template copy (unlock items) or a wild pet has no owner.
+    private static final UUID NULL_OWNER = new UUID(0L, 0L);
     public void registerWaitingList(UUID owner, long delay) {
-        if (!waitingListApply.add(owner)) return;
+        final UUID key = owner == null ? NULL_OWNER : owner;
+        if (!waitingListApply.add(key)) return;
 
         Bukkit.getScheduler().runTaskLater(MCPets.getInstance(), () -> waitingListApply.remove(owner), delay);
     }
@@ -197,7 +201,7 @@ public class PetFood {
     public boolean apply(Pet pet, Player p) {
         if (pet == null) return false;
 
-        if (waitingListApply.contains(pet.getOwner())) return false;
+        if (waitingListApply.contains(pet.getOwner() == null ? NULL_OWNER : pet.getOwner())) return false;
 
         if (type == null) return false;
 
@@ -349,6 +353,7 @@ public class PetFood {
      * Get the PetFood from the id
      */
     public static PetFood getFromId(String id) {
+        if (id == null) return null;
         return petFoodHashMap.get(id);
     }
 

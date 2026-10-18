@@ -15,7 +15,7 @@ public class GlobalConfig extends AbstractConfig {
 
     @Getter
     @Setter
-    private boolean worldGuardSupport = true;
+    private volatile boolean worldGuardSupport = true;
 
     @Getter
     private String defaultName;
@@ -117,7 +117,7 @@ public class GlobalConfig extends AbstractConfig {
 
     @Getter
     @Setter
-    private boolean databaseSupport = false;
+    private volatile boolean databaseSupport = false;
 
     @Getter
     private boolean velocityEnabled;

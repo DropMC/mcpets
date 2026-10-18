@@ -1,8 +1,8 @@
 package fr.nocsy.mcpets.data.config;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
-import java.util.HashMap;
 
 import lombok.Getter;
 
@@ -18,7 +18,7 @@ public class ItemsListConfig extends AbstractConfig {
     private Map<String, ItemStack> items;
 
     private ItemsListConfig() {
-        items = new HashMap<>();
+        items = new ConcurrentHashMap<>();
     }
 
     public static ItemsListConfig getInstance() {
@@ -77,6 +77,7 @@ public class ItemsListConfig extends AbstractConfig {
      * null if it doesn't exist
      */
     public ItemStack getItemStack(String key) {
+        if (key == null) return null;
         return items.get(key);
     }
 

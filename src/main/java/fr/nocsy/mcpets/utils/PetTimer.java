@@ -4,17 +4,18 @@ import fr.nocsy.mcpets.MCPets;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PetTimer {
 
     @Getter
-    private static HashMap<PetTimer, Integer> runningTimers = new HashMap<>();
+    private static Map<PetTimer, Integer> runningTimers = new ConcurrentHashMap<>();
 
     @Getter
     private int cooldown;
     @Getter
-    private int remainingTime;
+    private volatile int remainingTime;
     private long frequency;
 
     private int task;

@@ -1,9 +1,9 @@
 package fr.nocsy.mcpets.utils;
 
-import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.lumine.mythic.bukkit.BukkitAdapter;
 import io.lumine.mythic.bukkit.MythicBukkit;
@@ -27,7 +27,7 @@ import fr.nocsy.mcpets.data.config.Language;
  */
 public final class PetAttackCooldown {
 
-    private static final Set<UUID> watched = new HashSet<>();
+    private static final Set<UUID> watched = ConcurrentHashMap.newKeySet();
 
     private PetAttackCooldown() {}
 

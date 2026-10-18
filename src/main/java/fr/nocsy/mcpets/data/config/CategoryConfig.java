@@ -14,12 +14,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class CategoryConfig extends AbstractConfig {
 
     @Getter
-    private static HashMap<String, CategoryConfig> mapping = new HashMap<>();
+    private static Map<String, CategoryConfig> mapping = new ConcurrentHashMap<>();
 
     @Getter
     private String id;
