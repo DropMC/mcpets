@@ -16,7 +16,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.event.entity.EntityTameEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -171,11 +170,11 @@ public class PetListener implements Listener {
             if (!activePetIds.isEmpty()) {
                 final List<String> petIdsToSave = new ArrayList<>(activePetIds);
                 final Map<String, String> skinIdsToSave = new HashMap<>(activeSkinIds);
-                Bukkit.getScheduler().runTaskAsynchronously(MCPets.getInstance(),
-                        () -> Databases.saveActivePet(uuid, petIdsToSave, skinIdsToSave));
+                Bukkit.getAsyncScheduler().runNow(MCPets.getInstance(),
+                        t -> Databases.saveActivePet(uuid, petIdsToSave, skinIdsToSave));
             } else {
-                Bukkit.getScheduler().runTaskAsynchronously(MCPets.getInstance(),
-                        () -> Databases.clearActivePet(uuid));
+                Bukkit.getAsyncScheduler().runNow(MCPets.getInstance(),
+                        t -> Databases.clearActivePet(uuid));
             }
         }
         if (pets.isEmpty() && GlobalConfig.getInstance().isSpawnPetAfterServerRestart()) {
@@ -196,7 +195,7 @@ public class PetListener implements Listener {
         Player p = e.getPlayer();
         UUID uuid = p.getUniqueId();
 
-        Bukkit.getScheduler().runTaskLater(MCPets.getInstance(), () -> {
+        p.getScheduler().runDelayed(MCPets.getInstance(), task -> {
             if (GlobalConfig.getInstance().isDatabaseSupport()) {
                 PlayerData.reloadAll(uuid);
             }
@@ -210,14 +209,14 @@ public class PetListener implements Listener {
                 reconnectionPets.remove(uuid); // discard — DB owns the state
 
                 // Load from DB asynchronously to avoid blocking the main thread
-                Bukkit.getScheduler().runTaskAsynchronously(MCPets.getInstance(), () -> {
+                Bukkit.getAsyncScheduler().runNow(MCPets.getInstance(), t -> {
                     Databases.ActivePetRecord record = Databases.loadActivePet(uuid);
                     if (record == null) return;
                     if (isLiveSwitch) {
                         Databases.clearActivePet(uuid);
                     }
-                    // Return to main thread to spawn pets (skin restoration uses static maps)
-                    Bukkit.getScheduler().runTask(MCPets.getInstance(), () -> {
+                    // Return to the player's thread to spawn pets where they stand
+                    p.getScheduler().run(MCPets.getInstance(), t2 -> {
                         if (!p.isOnline()) return;
                         for (String petId : record.getPetIds()) {
                             Pet template = Pet.getFromId(petId);
@@ -229,7 +228,7 @@ public class PetListener implements Listener {
                             restoreSkin(p, velocityPet, record.getSkinId(petId));
                             velocityPet.spawn(p.getLocation(), true);
                         }
-                    });
+                    }, null);
                 });
                 return; // never fall through to reconnectionPets when Velocity is enabled
             }
@@ -265,7 +264,7 @@ public class PetListener implements Listener {
                     }
                 }
             }
-        }, 20L);
+        }, null, 20L);
     }
 
     private void restoreSkin(Player p, Pet pet, String skinPathId) {
@@ -287,12 +286,7 @@ public class PetListener implements Listener {
         for (Pet pet : new ArrayList<>(Pet.getActivePetsForOwner(p.getUniqueId()))) {
             if (pet.getTamingProgress() < 1) continue;
             pet.despawn(PetDespawnReason.TELEPORT);
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    pet.spawn(p, p.getLocation());
-                }
-            }.runTaskLater(MCPets.getInstance(), 20L);
+            p.getScheduler().runDelayed(MCPets.getInstance(), t -> pet.spawn(p, p.getLocation()), null, 20L);
         }
     }
 

@@ -25,7 +25,6 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 public class LivingPetsListener implements Listener {
 
@@ -168,12 +167,10 @@ public class LivingPetsListener implements Listener {
 
         PetStats stats = pet.getPetStats();
         // Must run ASync otherwise it's not updating
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                stats.updateHealth();
-            }
-        }.runTaskLater(MCPets.getInstance(), 1L);
+        // A pet that is gone has no health to read, which is all updateHealth would find next tick.
+        final Entity entity = pet.getEntityIfStillHere();
+        if (entity == null) return;
+        entity.getScheduler().runDelayed(MCPets.getInstance(), t -> stats.updateHealth(), null, 1L);
     }
 
     @EventHandler

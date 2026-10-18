@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityMountEvent;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 /**
  * Detects players ending up clipped inside a solid block right after mounting
@@ -35,18 +35,17 @@ public class MountWallClipListener implements Listener {
         if (!Utils.isLocationClearForMount(safeLoc))
             return;
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!player.isOnline() || player.isDead())
-                    return;
-                if (Utils.isLocationClearForMount(player.getLocation()))
-                    return;
+        player.getScheduler().runDelayed(MCPets.getInstance(), t -> {
+            if (!player.isOnline() || player.isDead())
+                return;
+            if (Utils.isLocationClearForMount(player.getLocation()))
+                return;
 
-                pet.dismount(player);
-                player.teleport(safeLoc);
-                Language.NOT_MOUNTABLE_HERE.sendMessage(player);
-            }
-        }.runTaskLater(MCPets.getInstance(), 2L);
+            pet.dismount(player);
+            // A sync teleport throws on Folia, and the async one refuses a rider on stock Canvas.
+            player.leaveVehicle();
+            player.teleportAsync(safeLoc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+            Language.NOT_MOUNTABLE_HERE.sendMessage(player);
+        }, null, 2L);
     }
 }

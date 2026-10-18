@@ -13,7 +13,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -203,20 +202,17 @@ public class PetSkin {
 
         instancePet.despawn(PetDespawnReason.SKIN);
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                instancePet.spawn(loc, false);
-                if (hasRider) {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            instancePet.setMount(Bukkit.getPlayer(instancePet.getOwner()));
-                        }
-                    }.runTaskLater(MCPets.getInstance(), 2L);
+        // The new skin spawns where the old one stood; the rider climbs back on from their own thread.
+        Bukkit.getRegionScheduler().runDelayed(MCPets.getInstance(), loc, t -> {
+            instancePet.spawn(loc, false);
+            if (hasRider) {
+                final Player rider = Bukkit.getPlayer(instancePet.getOwner());
+                if (rider != null) {
+                    rider.getScheduler().runDelayed(MCPets.getInstance(),
+                            t2 -> instancePet.setMount(Bukkit.getPlayer(instancePet.getOwner())), null, 2L);
                 }
             }
-        }.runTaskLater(MCPets.getInstance(), 2L);
+        }, 2L);
         return true;
     }
 }

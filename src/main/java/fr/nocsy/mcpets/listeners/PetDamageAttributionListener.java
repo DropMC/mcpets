@@ -46,20 +46,29 @@ public class PetDamageAttributionListener implements Listener {
         if (owner == null || owner.getWorld() != victim.getWorld()) {
             return;
         }
+        // Folia can not credit an owner ticking on another region: the hit stays the pet's own.
+        if (!Bukkit.isOwnedByCurrentRegion(owner)) {
+            return;
+        }
 
         final double amount = event.getDamage();
         event.setCancelled(true);
 
         // Dealt on the next tick rather than inline: the server is still inside this victim's damage handling, and a
         // second hit landed there is swallowed before it reaches the health calculation.
-        Bukkit.getScheduler().runTask(MCPets.getInstance(), () -> {
+        victim.getScheduler().run(MCPets.getInstance(), t -> {
             if (!victim.isValid() || !owner.isOnline()) {
                 return;
             }
             // Pet skills are written to ignore invulnerability frames (pi=true in the MythicMobs skill files), and
             // going back through Bukkit would reinstate them, so a fast pet would silently lose most of its hits.
             victim.setNoDamageTicks(0);
-            victim.damage(amount, owner);
-        });
+            if (Bukkit.isOwnedByCurrentRegion(owner)) {
+                victim.damage(amount, owner);
+            } else {
+                // The owner left this region within the tick: deal the hit without the credit rather than lose it.
+                victim.damage(amount);
+            }
+        }, null);
     }
 }

@@ -15,7 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
@@ -64,12 +64,7 @@ public class PetInteractionMenuListener implements Listener {
     }
 
     public static void skins(final Player p, final Pet pet) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                PetSkin.openInventory(p, pet);
-            }
-        }.runTaskLater(MCPets.getInstance(), 2L);
+        p.getScheduler().runDelayed(MCPets.getInstance(), t -> PetSkin.openInventory(p, pet), null, 2L);
     }
 
     public static void revoke(final Player p, @NotNull final Pet pet) {
@@ -162,7 +157,13 @@ public class PetInteractionMenuListener implements Listener {
                     Language.NICKNAME_NOT_CHANGED.sendMessage(p);
                     return;
                 }
-                pet.setDisplayName(name, true, stripColor);
+                // Chat is async: the name goes onto the entity from the pet's own thread.
+                final Entity petEntity = pet.getEntityIfStillHere();
+                if (petEntity != null) {
+                    final String newName = name;
+                    petEntity.getScheduler().run(MCPets.getInstance(),
+                            t -> pet.setDisplayName(newName, true, stripColor), null);
+                }
 
                 Language.NICKNAME_CHANGED_SUCCESSFULY.sendMessage(p);
             } else {

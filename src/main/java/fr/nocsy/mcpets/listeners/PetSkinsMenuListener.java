@@ -4,6 +4,9 @@ import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.PetSkin;
 import fr.nocsy.mcpets.data.config.Language;
 import fr.nocsy.mcpets.data.inventories.PetInventoryHolder;
+import fr.nocsy.mcpets.utils.Tasks;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -46,6 +49,23 @@ public class PetSkinsMenuListener implements Listener {
         if (pet == null) {
             Language.REVOKED_BEFORE_CHANGES.sendMessage(p);
             p.closeInventory();
+            return;
+        }
+
+        final Entity petEntity = pet.getEntityIfStillHere();
+        if (petEntity != null && !Bukkit.isOwnedByCurrentRegion(petEntity)) {
+            // The pet ticks on another region: the skin is swapped there and the result reported from there.
+            p.closeInventory();
+            Tasks.onEntity(petEntity, () -> {
+                if (petSkin.apply(pet))
+                    Language.SKIN_APPLIED.sendMessage(p);
+                else
+                    Language.SKIN_COULD_NOT_APPLY.sendMessage(p);
+                pet.setActiveSkin(petSkin);
+            }, () -> {
+                Language.SKIN_COULD_NOT_APPLY.sendMessage(p);
+                pet.setActiveSkin(petSkin);
+            });
             return;
         }
 

@@ -60,7 +60,7 @@ public class BetterModelModeler implements AbstractModeler {
         }
 
         // Fallback to vanilla passengers if no HitBox is available
-        Entity petEntity = Bukkit.getEntity(petUUID);
+        Entity petEntity = ownedEntity(petUUID);
         if (petEntity == null)
             return false;
         petEntity.addPassenger(rider);
@@ -76,7 +76,7 @@ public class BetterModelModeler implements AbstractModeler {
             return registry.mountedHitBox().containsKey(rider.getUniqueId());
         }
         // Fallback to vanilla check
-        Entity petEntity = Bukkit.getEntity(petUUID);
+        Entity petEntity = ownedEntity(petUUID);
         if (petEntity == null)
             return false;
         return petEntity.getPassengers().contains(rider);
@@ -95,8 +95,8 @@ public class BetterModelModeler implements AbstractModeler {
             }
         }
         // Fallback to vanilla
-        Entity petEntity = Bukkit.getEntity(petUUID);
-        if (petEntity == null)
+        Entity petEntity = ownedEntity(petUUID);
+        if (petEntity == null || !Bukkit.isOwnedByCurrentRegion(rider))
             return;
         petEntity.removePassenger(rider);
     }
@@ -112,10 +112,21 @@ public class BetterModelModeler implements AbstractModeler {
             return;
         }
         // Fallback to vanilla
-        Entity petEntity = Bukkit.getEntity(petUUID);
+        Entity petEntity = ownedEntity(petUUID);
         if (petEntity == null)
             return;
         petEntity.eject();
+    }
+
+    /**
+     * The pet entity, only when this thread owns it: the passenger fallbacks edit it, and Folia has no passengers
+     * across regions anyway.
+     */
+    private static Entity ownedEntity(UUID petUUID) {
+        Entity petEntity = Bukkit.getEntity(petUUID);
+        if (petEntity == null || !Bukkit.isOwnedByCurrentRegion(petEntity))
+            return null;
+        return petEntity;
     }
 
     @Override

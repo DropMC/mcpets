@@ -34,12 +34,12 @@ public class ModelEngineListeners implements Listener {
 
         Entity entity = bukkitEntity.getOriginal();
 
-        Bukkit.getScheduler().runTask(MCPets.getInstance(), () -> {
+        entity.getScheduler().run(MCPets.getInstance(), t -> {
             Pet pet = Pet.getFromEntity(entity);
             if (pet != null && pet.isDespawnOnDismount()) {
                 pet.despawn(PetDespawnReason.DISMOUNT);
             }
-        });
+        }, null);
     }
 
     @EventHandler
