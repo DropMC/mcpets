@@ -468,7 +468,12 @@ public class Pet {
             allPets.addAll(petList);
         }
         for (final Pet pet : allPets) {
-            pet.despawn(PetDespawnReason.RELOAD);
+            // On Folia an entity removed while the server stops can throw; the other pets still go away
+            try {
+                pet.despawn(PetDespawnReason.RELOAD);
+            } catch (final RuntimeException e) {
+                MCPets.getLog().log(Level.WARNING, "Could not despawn pet " + pet.getId(), e);
+            }
         }
     }
 
