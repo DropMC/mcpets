@@ -24,7 +24,10 @@ import net.luckperms.api.LuckPerms;
 import com.sk89q.worldguard.WorldGuard;
 
 import io.lumine.mythic.bukkit.MythicBukkit;
+import io.lumine.mythic.api.skills.placeholders.PlaceholderManager;
 import io.lumine.mythic.core.skills.CustomComponentRegistry;
+import io.lumine.mythic.core.utils.annotations.AnnotationUtil;
+import io.lumine.mythic.core.utils.annotations.MythicPlaceholder;
 
 import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.VanishedPets;
@@ -148,20 +151,12 @@ public class MCPets extends JavaPlugin {
         CommandRegistry.register(this);
         EventListener.init(this);
         modeler.registerListeners(this);
+        registerMythicComponents();
 
         Bukkit.getGlobalRegionScheduler().run(this, t -> {
             loadConfigs();
             // PetStats.saveStats() and VelocitySyncManager.init() are scheduled inside
             // loadConfigs() once async DB init completes — see scheduleDbDependentTasks()
-
-            // Register the placeholders
-            componentRegistry = new CustomComponentRegistry(instance, Lists.newArrayList());
-            componentRegistry.registerCustomComponent(CustomComponentRegistry.MythicComponentType.PLACEHOLDER, PLACEHOLDER_PACKAGE)
-                    .registerCustomComponent(CustomComponentRegistry.MythicComponentType.CONDITION, CONDITION_PACKAGE)
-                    .registerCustomComponent(CustomComponentRegistry.MythicComponentType.TARGETER, TARGETER_PACKAGE)
-                    .registerCustomComponent(CustomComponentRegistry.MythicComponentType.MECHANIC, MECHANIC_PACKAGE);
-
-            reparseMythicSkills();
 
             getLog().info("-=-=-=-= MCPets loaded =-=-=-=-");
             getLog().info("      Plugin made by Nocsy     ");
@@ -173,26 +168,27 @@ public class MCPets extends JavaPlugin {
     }
 
     /**
-     * Makes MythicMobs re-read its packs so the components registered just above actually take effect.
+     * Hands this plugin's mechanics, conditions, targeters and placeholders to MythicMobs before it builds its skills.
      * <p>
-     * MythicMobs compiles every skill expression while it enables, which is before this plugin enables because
-     * MCPets depends on it. A placeholder it does not know at that point stays in the expression as literal text, so
-     * a skill line like {@code cooldown=(30-(<pet.power>*0.2))} reaches the math parser with the tag intact, the
-     * whole expression fails, and the skill ends up with no cooldown at all.
-     * <p>
-     * A full reload is what it takes, and it is deliberately blunt. Registering from onLoad is rejected by Bukkit,
-     * because {@code CustomComponentRegistry} subscribes to events in its constructor. Reloading only the
-     * configuration, or only the skills, was measured and leaves {@code &lt;pet.power&gt;} unresolved: the components
-     * this plugin registers while enabling only take hold once MythicMobs reloads and fires the event that makes it
-     * register them again. This is the same /mm reload an admin had to run by hand after every restart.
+     * MythicMobs reads its packs while it enables, which is before this plugin, but it only builds each skill's
+     * mechanics on the first tick, asking every listener for the names it does not know; registering here, still
+     * inside the enable phase, answers those requests. Placeholders are different: an expression such as
+     * {@code cooldown=(30-(<pet.power>*0.2))} was tokenized while the packs were read, with the tag as plain text, so the
+     * placeholders are registered directly and MythicMobs re-tokenizes every expression it has. That replaces the
+     * full /mm reload this used to run, which held the tick for several seconds on every start.
      */
-    private void reparseMythicSkills() {
-        try {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mm reload");
-        } catch (final Exception ex) {
-            getLog().log(Level.SEVERE, "MythicMobs could not be reloaded, so pet placeholders such as "
-                    + "<pet.power> will not resolve until /mm reload is run by hand", ex);
+    private void registerMythicComponents() {
+        componentRegistry = new CustomComponentRegistry(instance, Lists.newArrayList());
+        componentRegistry.registerCustomComponent(CustomComponentRegistry.MythicComponentType.PLACEHOLDER, PLACEHOLDER_PACKAGE)
+                .registerCustomComponent(CustomComponentRegistry.MythicComponentType.CONDITION, CONDITION_PACKAGE)
+                .registerCustomComponent(CustomComponentRegistry.MythicComponentType.TARGETER, TARGETER_PACKAGE)
+                .registerCustomComponent(CustomComponentRegistry.MythicComponentType.MECHANIC, MECHANIC_PACKAGE);
+
+        final PlaceholderManager placeholders = getMythicMobs().getPlaceholderManager();
+        for (final Class<?> placeholder : AnnotationUtil.getAnnotatedClasses(this, PLACEHOLDER_PACKAGE, MythicPlaceholder.class)) {
+            placeholders.register(placeholder);
         }
+        placeholders.recheckForPlaceholders();
     }
 
     @Override
