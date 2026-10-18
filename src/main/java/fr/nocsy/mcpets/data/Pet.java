@@ -229,6 +229,13 @@ public class Pet {
     // does nothing.
     private volatile AiRun aiRun;
 
+    // Guarded by this. The thread running a despawn of this pet right now (nested despawns on it are allowed), so
+    // two threads never put the same entity away twice; and the AI retire waiting to put the pet away, which any
+    // other despawn replaces.
+    private Thread despawningThread;
+    private int despawnDepth;
+    private Object pendingRetire;
+
     private static final class AiRun {
         private volatile ScheduledTask task;
         // A tick asked the owner's thread to decide and is waiting for it.
@@ -1123,7 +1130,13 @@ public class Pet {
         // If the owner is not in the same world as the pet and that the pet is fully tamed, we move it
         // to the owner
         if (!ownerLoc.getWorld().getName().equals(petLoc.getWorld().getName()) && tamingProgress == 1) {
-            getInstance().despawn(PetDespawnReason.TELEPORT);
+            // Another thread putting the pet away right now wins, and then the pet is not spawned here either.
+            if (!beginDespawn(null)) return;
+            try {
+                getInstance().despawnClaimed(PetDespawnReason.TELEPORT);
+            } finally {
+                endDespawn();
+            }
             getInstance().spawn(p, petLocation);
             return;
         }
@@ -1173,15 +1186,35 @@ public class Pet {
     /**
      * The pet entity was removed under the AI without MCPets despawning it (chunk or world unload, a plugin or
      * MythicMobs removing it). Same as a MythicMobs despawn: put the pet away and bring it back at the owner.
+     * This runs inside the entity's removal, where nothing may be spawned or removed, so it only claims the pet and
+     * does the rest on the owner's next tick, as the MythicMobDespawnEvent handler would.
      */
     private void aiRetired(final AiRun run) {
-        if (aiRun != run || removed) return;
+        final Object retire = new Object();
+        synchronized (this) {
+            if (aiRun != run || removed || despawningThread != null) return;
+            stopAI();
+            pendingRetire = retire;
+        }
 
-        final ActiveMob mob = activeMob;
-        if (mob == null || mob.getEntity() == null) {
-            despawn(PetDespawnReason.MYTHICMOBS);
-        } else {
-            despawnElsewhere(PetDespawnReason.MYTHICMOBS, mob, null, false);
+        final Entity ent = entityOf(activeMob);
+        if (ent != null)
+            PetListener.handledByRetire(ent.getUniqueId());
+
+        final Runnable finish = () -> finishRetire(retire);
+        final Player p = owner == null ? null : Bukkit.getPlayer(owner);
+        if (p == null || p.getScheduler().run(MCPets.getInstance(), t -> finish.run(),
+                () -> Bukkit.getGlobalRegionScheduler().run(MCPets.getInstance(), t -> finish.run())) == null) {
+            Bukkit.getGlobalRegionScheduler().run(MCPets.getInstance(), t -> finish.run());
+        }
+    }
+
+    private void finishRetire(final Object retire) {
+        if (!beginDespawn(retire)) return;
+        try {
+            despawnClaimed(PetDespawnReason.MYTHICMOBS);
+        } finally {
+            endDespawn();
         }
         PetListener.respawnAtOwner(this);
     }
@@ -1199,6 +1232,34 @@ public class Pet {
      * Despawn the pet
      */
     public boolean despawn(final PetDespawnReason reason) {
+        if (!beginDespawn(null)) return false;
+        try {
+            return despawnClaimed(reason);
+        } finally {
+            endDespawn();
+        }
+    }
+
+    /**
+     * Claims a despawn of this pet. False when another thread is despawning it right now, or, for a retire, when a
+     * despawn already replaced it. Never waits: the other thread finishes the job.
+     */
+    private synchronized boolean beginDespawn(final Object retire) {
+        final Thread current = Thread.currentThread();
+        if (despawningThread != null && despawningThread != current) return false;
+        if (retire != null && pendingRetire != retire) return false;
+        pendingRetire = null;
+        despawningThread = current;
+        despawnDepth++;
+        stopAI();
+        return true;
+    }
+
+    private synchronized void endDespawn() {
+        if (--despawnDepth == 0) despawningThread = null;
+    }
+
+    private boolean despawnClaimed(final PetDespawnReason reason) {
         final ActiveMob mob = activeMob;
         final Entity ent = entityOf(mob);
         // Another region owns the entity: do the bookkeeping here and remove the entity on its own thread.
@@ -1262,7 +1323,7 @@ public class Pet {
     /**
      * The despawn of a pet whose entity this thread does not own. The bookkeeping (event, AI, maps, player data,
      * messages) runs here in the usual order; the entity part runs on the entity's thread with the mob captured
-     * now. A null entity means it is already being removed: only the model is closed then.
+     * now.
      */
     private boolean despawnElsewhere(final PetDespawnReason reason, final ActiveMob mob, final Entity ent,
                                      final boolean removeMobFirst) {
@@ -1284,12 +1345,8 @@ public class Pet {
         }
 
         final UUID petUUID = mob.getEntity().getUniqueId();
-        if (ent == null) {
-            MCPets.getModeler().removeModel(petUUID);
-        } else {
-            Tasks.onEntity(ent, () -> removeEntity(reason, mob, petUUID, removeMobFirst),
-                    () -> MCPets.getModeler().removeModel(petUUID));
-        }
+        Tasks.onEntity(ent, () -> removeEntity(reason, mob, petUUID, removeMobFirst),
+                () -> MCPets.getModeler().removeModel(petUUID));
 
         activeMob = null;
 
@@ -1381,15 +1438,21 @@ public class Pet {
      */
     public void teleport(final Location loc) {
         if (isStillHere()) {
-            final ActiveMob mob = this.activeMob;
-            final Entity ent = entityOf(mob);
-            if (ent != null && !Bukkit.isOwnedByCurrentRegion(ent)) {
-                despawnElsewhere(PetDespawnReason.TELEPORT, mob, ent, true);
-            } else {
-                // Removing the mob removes the entity, which would retire the AI as if the pet had vanished.
-                stopAI();
-                this.activeMob.remove();
-                this.despawn(PetDespawnReason.TELEPORT);
+            // Another thread putting the pet away right now wins, and then the pet is not spawned here either.
+            if (!beginDespawn(null)) return;
+            try {
+                final ActiveMob mob = this.activeMob;
+                final Entity ent = entityOf(mob);
+                if (ent != null && !Bukkit.isOwnedByCurrentRegion(ent)) {
+                    despawnElsewhere(PetDespawnReason.TELEPORT, mob, ent, true);
+                } else {
+                    // Removing the mob removes the entity, which would retire the AI as if the pet had vanished;
+                    // beginDespawn has stopped the AI already.
+                    this.activeMob.remove();
+                    this.despawnClaimed(PetDespawnReason.TELEPORT);
+                }
+            } finally {
+                endDespawn();
             }
             this.spawn(loc, true);
         }

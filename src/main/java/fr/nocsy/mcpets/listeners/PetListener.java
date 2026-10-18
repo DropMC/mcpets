@@ -1,6 +1,7 @@
 package fr.nocsy.mcpets.listeners;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.List;
 import java.util.UUID;
 import java.util.HashMap;
@@ -350,9 +351,19 @@ public class PetListener implements Listener {
      * Handle random despawn
      */
     private static final Map<UUID, Integer> repeatRespawn = new ConcurrentHashMap<>();
+    // Mobs whose removal the pet AI's retired path already handles. MythicMobs fires this event a tick after the
+    // removal (and never on Folia), so without this the pet, already back at its owner, would be despawned again.
+    private static final Set<UUID> retiredMobs = ConcurrentHashMap.newKeySet();
+
+    public static void handledByRetire(final UUID mobUUID) {
+        retiredMobs.add(mobUUID);
+        Bukkit.getGlobalRegionScheduler().runDelayed(MCPets.getInstance(), t -> retiredMobs.remove(mobUUID), 20L);
+    }
+
     @EventHandler
     public void despawn(MythicMobDespawnEvent e) {
         if (e.getEntity() == null) return;
+        if (retiredMobs.remove(e.getEntity().getUniqueId())) return;
 
         Pet pet = Pet.getFromEntity(e.getEntity());
         if (pet == null) return;
@@ -365,7 +376,8 @@ public class PetListener implements Listener {
 
     /**
      * Bring back a pet that was despawned under its owner (MythicMobs despawn, or its entity removed under the AI),
-     * unless it already came back twice within the last 10 ticks for that owner.
+     * unless it already came back twice within the last 10 ticks for that owner. Never call it from inside an
+     * entity removal: it can spawn inline.
      */
     public static void respawnAtOwner(final Pet pet) {
         UUID ownerUUID = pet.getOwner();
