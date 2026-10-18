@@ -53,7 +53,12 @@ public final class Tasks {
         // The entity that just retired can still look present for the rest of this tick.
         if (entity == null || entity == retiredEntity
                 || entity.getScheduler().run(MCPets.getInstance(), t -> task.run(), () -> forPet(pet, task, entity)) == null) {
-            Bukkit.getGlobalRegionScheduler().run(MCPets.getInstance(), t -> task.run());
+            // The pet can be out again by the time this runs: then its new entity's thread must run the task.
+            Bukkit.getGlobalRegionScheduler().run(MCPets.getInstance(), t -> {
+                final Entity now = pet.getEntityIfStillHere();
+                if (now != null && now != entity && now != retiredEntity) forPet(pet, task, retiredEntity);
+                else task.run();
+            });
         }
     }
 }
