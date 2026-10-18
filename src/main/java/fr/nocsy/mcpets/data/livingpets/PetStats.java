@@ -179,6 +179,11 @@ public class PetStats {
         if (previous != null)
             previous.cancel();
         regenerationEntity = entity;
+        // Stats rebuilt while the plugin is disabling (saving an owner who is not cached) have nothing to regenerate
+        if (!MCPets.getInstance().isEnabled()) {
+            regenerationTask = null;
+            return;
+        }
 
         if (entity == null) {
             // No entity yet: look once on the next tick, as the first run of a global timer would have.
@@ -523,7 +528,14 @@ public class PetStats {
             return;
         }
 
-        new ArrayList<>(petStatsList).forEach(PetStats::save);
+        // One pet that fails to save must not keep the others from saving
+        for (PetStats stats : new ArrayList<>(petStatsList)) {
+            try {
+                stats.save();
+            } catch (RuntimeException ex) {
+                MCPets.getLog().log(java.util.logging.Level.SEVERE, "Failed to save the stats of pet " + stats.getPet().getId(), ex);
+            }
+        }
     }
 
     /**

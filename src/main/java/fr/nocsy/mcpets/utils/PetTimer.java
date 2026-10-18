@@ -38,6 +38,9 @@ public class PetTimer {
         // If it's running then cancel the current scheduler
         if (isRunning())
             stop(null);
+        // A disabled plugin cannot schedule, and nothing would run the timer after the stop anyway
+        if (!MCPets.getInstance().isEnabled())
+            return;
         remainingTime = cooldown;
         // Counts down on the global region: a timer outlives the pet entity it belongs to.
         task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(MCPets.getInstance(), t -> {
