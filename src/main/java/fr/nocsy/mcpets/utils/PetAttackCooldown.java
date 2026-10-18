@@ -11,7 +11,7 @@ import io.lumine.mythic.core.skills.auras.Aura;
 import io.lumine.mythic.core.skills.auras.AuraRegistry;
 
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.config.GlobalConfig;
@@ -51,16 +51,15 @@ public final class PetAttackCooldown {
             return;
         }
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (player.isOnline() && remainingTicks(player) > 0) return;
+        // Polls on the owner's thread; a quit retires it, which is when the old timer stopped too.
+        final ScheduledTask task = player.getScheduler().runAtFixedRate(MCPets.getInstance(), t -> {
+            if (player.isOnline() && remainingTicks(player) > 0) return;
 
-                cancel();
-                clear(uuid);
-                if (player.isOnline()) Language.ATTACK_READY.sendMessage(player);
-            }
-        }.runTaskTimer(MCPets.getInstance(), 10L, 10L);
+            t.cancel();
+            clear(uuid);
+            if (player.isOnline()) Language.ATTACK_READY.sendMessage(player);
+        }, () -> clear(uuid), 10L, 10L);
+        if (task == null) clear(uuid);
     }
 
     /** Drops a pending watch, e.g. when the pet is stored and there is nothing left to announce to. */
