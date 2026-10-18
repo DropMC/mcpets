@@ -94,8 +94,10 @@ public class PetStats {
      * Update the pet's health for the stats
      */
     public void updateHealth() {
-        if (!pet.isStillHere()) return;
-        currentHealth = pet.getActiveMob().getEntity().getHealth();
+        // Read the mob once: a despawn on another thread can null it between the check and the use.
+        final ActiveMob mob = pet.getActiveMobIfStillHere();
+        if (mob == null) return;
+        currentHealth = mob.getEntity().getHealth();
     }
 
     /**
@@ -280,8 +282,9 @@ public class PetStats {
      * so the menu read a permanent 20/50.
      */
     public void refreshMaxHealth() {
-        if (!pet.isStillHere()) return;
-        if (!(pet.getActiveMob().getEntity().getBukkitEntity() instanceof LivingEntity living)) return;
+        final ActiveMob mob = pet.getActiveMobIfStillHere();
+        if (mob == null) return;
+        if (!(mob.getEntity().getBukkitEntity() instanceof LivingEntity living)) return;
 
         final AttributeInstance maxHealth = living.getAttribute(Attribute.MAX_HEALTH);
         if (maxHealth == null) return;
@@ -295,8 +298,9 @@ public class PetStats {
     public void setHealth(double value) {
         value = Math.min(value, currentLevel.getMaxHealth());
 
-        if (!pet.isStillHere()) return;
-        pet.getActiveMob().getEntity().setHealth(value);
+        final ActiveMob mob = pet.getActiveMobIfStillHere();
+        if (mob == null) return;
+        mob.getEntity().setHealth(value);
         currentHealth = value;
     }
 

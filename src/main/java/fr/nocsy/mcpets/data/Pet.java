@@ -1415,22 +1415,31 @@ public class Pet {
      * Say whether or not the entity is still present
      */
     public boolean isStillHere() {
-        return activeMob != null &&
-                activeMob.getEntity() != null &&
-                activeMob.getEntity().getBukkitEntity() != null &&
+        return isStillHere(activeMob);
+    }
+
+    private boolean isStillHere(final ActiveMob mob) {
+        return mob != null &&
+                mob.getEntity() != null &&
+                mob.getEntity().getBukkitEntity() != null &&
                 //!activeMob.getEntity().getBukkitEntity().isDead() &&     THIS ONE APPARENTLY DOESN'T WORK AS INTENDED
-                !activeMob.isDead() &&
+                !mob.isDead() &&
                 !removed;
     }
 
     /**
-     * The pet's Bukkit entity when {@link #isStillHere()}, else null. Reads the active mob once, so a despawn on
-     * another thread cannot null it between the check and the use.
+     * The active mob when {@link #isStillHere()}, else null. Reads it once, so a despawn on another thread cannot
+     * null it between the check and the use.
      */
-    public Entity getEntityIfStillHere() {
+    public ActiveMob getActiveMobIfStillHere() {
         final ActiveMob mob = activeMob;
-        if (mob == null || mob.getEntity() == null || mob.isDead() || removed) return null;
-        return mob.getEntity().getBukkitEntity();
+        return isStillHere(mob) ? mob : null;
+    }
+
+    /** The pet's Bukkit entity when {@link #isStillHere()}, else null. See {@link #getActiveMobIfStillHere()}. */
+    public Entity getEntityIfStillHere() {
+        final ActiveMob mob = getActiveMobIfStillHere();
+        return mob == null ? null : mob.getEntity().getBukkitEntity();
     }
 
     /** The current active mob's Bukkit entity, whether or not the pet is still marked as here. */
@@ -1454,6 +1463,8 @@ public class Pet {
     }
 
     public void setDisplayName(String name, final boolean save, final boolean stripColor) {
+        // Read the mob once: a despawn on another thread can null it while this runs.
+        final ActiveMob mob = activeMob;
 
         boolean isDefaultName = false;
         if (name == null) name = Language.TAG_TO_REMOVE_NAME.getMessage();
@@ -1464,7 +1475,7 @@ public class Pet {
                 && !GlobalConfig.getInstance().isOverrideDefaultName()) {
             isDefaultName = true;
             boolean useMM = useDefaultMythicMobNames != null ? useDefaultMythicMobNames : GlobalConfig.getInstance().isUseDefaultMythicMobNames();
-            if (useMM) name = activeMob.getDisplayName();
+            if (useMM) name = mob.getDisplayName();
             else {
                 name = GlobalConfig.getInstance().getDefaultName()
                         .replace("%player%", Optional.ofNullable(Bukkit.getOfflinePlayer(owner).getName()).orElse("Unknown"))
@@ -1490,16 +1501,17 @@ public class Pet {
             if (name != null) name = name.replace("'", " ");
 
             currentName = name;
-            if (isStillHere()) {
+            if (isStillHere(mob)) {
+                final Entity petEntity = mob.getEntity().getBukkitEntity();
                 if (currentName == null || currentName.equalsIgnoreCase(Language.TAG_TO_REMOVE_NAME.getMessage())) {
                     Component customName = Utils.toComponent(GlobalConfig.getInstance().getDefaultName()
                             .replace("%player%", Optional.ofNullable(Bukkit.getOfflinePlayer(owner).getName()).orElse("Unknown"))
                             .replace("%pet_id%", id)
                             .replace("%pet_name%", icon.getItemMeta().getDisplayName()));
 
-                    activeMob.getEntity().getBukkitEntity().customName(customName);
+                    petEntity.customName(customName);
 
-                    activeMob.getEntity().getBukkitEntity().getScheduler().runDelayed(MCPets.getInstance(),
+                    petEntity.getScheduler().runDelayed(MCPets.getInstance(),
                             t -> setNameTag(currentName, false), null, 10L);
 
                     if (save) {
@@ -1511,9 +1523,9 @@ public class Pet {
                     return;
                 }
 
-                activeMob.getEntity().getBukkitEntity().customName(Utils.toComponent(currentName));
+                petEntity.customName(Utils.toComponent(currentName));
 
-                activeMob.getEntity().getBukkitEntity().getScheduler().runDelayed(MCPets.getInstance(),
+                petEntity.getScheduler().runDelayed(MCPets.getInstance(),
                         t -> setNameTag(currentName, true), null, 10L);
 
                 Debugger.send("§7Applying name " + name + " to pet " + id);
@@ -1566,23 +1578,25 @@ public class Pet {
     public boolean setMount(final Entity ent) {
         if (ent == null) return false;
 
+        // Read the mob once: a despawn on another thread can null it while this runs.
+        final ActiveMob mob = activeMob;
         // Folia has no passengers across regions: a pet ticking elsewhere can not carry this rider.
-        final Entity petEntity = entityOf(activeMob);
+        final Entity petEntity = entityOf(mob);
         if (petEntity != null && !Bukkit.isOwnedByCurrentRegion(petEntity)) return false;
 
         final EntityMountPetEvent event = new EntityMountPetEvent(ent, this);
-        final EntityMountEvent vanillaMountEvent = new EntityMountEvent(ent, activeMob.getEntity().getBukkitEntity());
+        final EntityMountEvent vanillaMountEvent = new EntityMountEvent(ent, mob.getEntity().getBukkitEntity());
         Utils.callEvent(vanillaMountEvent);
         Utils.callEvent(event);
 
         // We still return true as it's a normal situation, not linked to mounting point issue
         if (event.isCancelled() || vanillaMountEvent.isCancelled()) return true;
 
-        if (isStillHere()) {
-            final UUID petUUID = activeMob.getEntity().getUniqueId();
+        if (isStillHere(mob)) {
+            final UUID petUUID = mob.getEntity().getUniqueId();
             try {
                 if (!MCPets.getModeler().mountDriver(petUUID, ent, mountType)) {
-                    activeMob.getEntity().getBukkitEntity().addPassenger(ent);
+                    mob.getEntity().getBukkitEntity().addPassenger(ent);
                     return false;
                 }
             } catch (final IllegalStateException ex) {
@@ -1597,8 +1611,9 @@ public class Pet {
      * Say if the specified entity is riding on the pet
      */
     public boolean hasMount(final Entity ent) {
-        if (isStillHere()) {
-            final UUID petUUID = activeMob.getEntity().getUniqueId();
+        final ActiveMob mob = getActiveMobIfStillHere();
+        if (mob != null) {
+            final UUID petUUID = mob.getEntity().getUniqueId();
             return MCPets.getModeler().hasMount(petUUID, ent);
         }
         return false;
@@ -1610,11 +1625,12 @@ public class Pet {
     public void dismount(final Entity ent) {
         if (ent == null) return;
 
-        if (isStillHere()) {
+        final ActiveMob mob = getActiveMobIfStillHere();
+        if (mob != null) {
             // A pet on another region carries no rider from here, and hopping to it would stop an entity it does
             // not own from riding.
-            if (!Bukkit.isOwnedByCurrentRegion(activeMob.getEntity().getBukkitEntity())) return;
-            final UUID localUUID = activeMob.getEntity().getUniqueId();
+            if (!Bukkit.isOwnedByCurrentRegion(mob.getEntity().getBukkitEntity())) return;
+            final UUID localUUID = mob.getEntity().getUniqueId();
             MCPets.getModeler().dismountRider(localUUID, ent);
         }
     }
@@ -1644,8 +1660,9 @@ public class Pet {
      * Null if it's null or invisible
      */
     public AbstractNameTag getNameBone() {
-        if (isStillHere()) {
-            final UUID localUUID = activeMob.getEntity().getUniqueId();
+        final ActiveMob mob = getActiveMobIfStillHere();
+        if (mob != null) {
+            final UUID localUUID = mob.getEntity().getUniqueId();
             return MCPets.getModeler().getNameTag(localUUID);
         }
         return null;
