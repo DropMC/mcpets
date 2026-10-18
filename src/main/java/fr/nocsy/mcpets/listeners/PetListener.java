@@ -26,6 +26,9 @@ import fr.nocsy.mcpets.data.Items;
 import fr.nocsy.mcpets.PPermission;
 import fr.nocsy.mcpets.utils.Utils;
 import fr.nocsy.mcpets.data.PetSkin;
+import fr.nocsy.mcpets.data.Category;
+import fr.nocsy.mcpets.data.PlayerSignal;
+import fr.nocsy.mcpets.utils.PathFindingUtils;
 import fr.nocsy.mcpets.data.sql.Databases;
 import fr.nocsy.mcpets.data.sql.PlayerData;
 import fr.nocsy.mcpets.utils.debug.Debugger;
@@ -187,6 +190,10 @@ public class PetListener implements Listener {
         // Clean up player caches from memory to prevent memory leak
         PlayerData.remove(p.getUniqueId());
         PetInventory.removePlayer(p.getUniqueId());
+        PlayerSignal.remove(uuid);
+        PathFindingUtils.remove(uuid);
+        Category.unregisterPlayerView(p);
+        Pet.getActiveSkinsMap().remove(uuid);
     }
 
 

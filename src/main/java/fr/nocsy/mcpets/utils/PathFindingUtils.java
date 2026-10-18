@@ -20,6 +20,13 @@ public class PathFindingUtils {
     }
 
     /**
+     * Forget the owner's last stop position, once they leave
+     */
+    public static void remove(UUID owner) {
+        registry.remove(owner);
+    }
+
+    /**
      * Stop the entity at its location
      */
     public static void stop(AbstractEntity entity, UUID owner) {

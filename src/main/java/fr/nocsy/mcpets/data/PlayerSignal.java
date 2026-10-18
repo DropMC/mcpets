@@ -34,6 +34,13 @@ public class PlayerSignal {
     }
 
     /**
+     * Forget the player's signal, once they leave
+     */
+    public static void remove(UUID owner) {
+        orderMap.remove(owner);
+    }
+
+    /**
      * Get the active signal of the player
      */
     public static String getSignalTag(UUID owner) {
