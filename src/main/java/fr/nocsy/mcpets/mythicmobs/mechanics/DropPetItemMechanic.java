@@ -3,6 +3,7 @@ package fr.nocsy.mcpets.mythicmobs.mechanics;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 
@@ -43,12 +44,18 @@ public class DropPetItemMechanic extends SkillMechanic implements ITargetedEntit
         ItemStack item = ItemsListConfig.getInstance().getItemStack(petItemId);
 
         if (item != null && ThreadLocalRandom.current().nextFloat() <= percentage) {
-            Bukkit.getScheduler().runTask(
+            // A target removed before the next tick still drops where it was, but not from inside its removal.
+            entity.getScheduler().run(
                     MCPets.getInstance(),
-                    () -> entity.getWorld().dropItemNaturally(
+                    t -> entity.getWorld().dropItemNaturally(
                             entity.getLocation(),
                             item
-                    )
+                    ),
+                    () -> {
+                        final Location loc = entity.getLocation();
+                        Bukkit.getRegionScheduler().run(MCPets.getInstance(), loc,
+                                t -> loc.getWorld().dropItemNaturally(loc, item));
+                    }
             );
         }
 

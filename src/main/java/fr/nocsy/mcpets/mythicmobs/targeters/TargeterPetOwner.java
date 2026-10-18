@@ -33,7 +33,8 @@ public class TargeterPetOwner extends IEntitySelector {
         if (pet != null) {
             Player owner = Bukkit.getPlayer(pet.getOwner());
 
-            if (owner != null) {
+            // Skills only act on what the pet's region owns (always true on Paper).
+            if (owner != null && Bukkit.isOwnedByCurrentRegion(owner)) {
                 return Collections.singleton(BukkitAdapter.adapt(owner));
             }
         }

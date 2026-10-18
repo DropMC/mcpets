@@ -1,9 +1,8 @@
 package fr.nocsy.mcpets.mythicmobs.mechanics;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 
-import fr.nocsy.mcpets.MCPets;
+import fr.nocsy.mcpets.utils.Tasks;
 import fr.nocsy.mcpets.data.Pet;
 
 import io.lumine.mythic.bukkit.BukkitAdapter;
@@ -49,7 +48,8 @@ public class PetExperienceMechanic extends SkillMechanic implements ITargetedEnt
 
         final double expValue = experience.get(context);
 
-        Bukkit.getScheduler().runTask(MCPets.getInstance(), () -> pet.getPetStats().addExperience(expValue));
+        // The stats outlive the entity: the experience lands even if the pet is put away before the next tick.
+        Tasks.forPet(pet, () -> pet.getPetStats().addExperience(expValue));
 
         return SkillResult.SUCCESS;
     }

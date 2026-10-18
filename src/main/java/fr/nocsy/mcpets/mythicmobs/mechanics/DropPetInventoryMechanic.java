@@ -42,7 +42,7 @@ public class DropPetInventoryMechanic extends SkillMechanic implements ITargeted
                 Inventory inv = petInventory.getInventory();
                 Location loc = BukkitAdapter.adapt(pet.getActiveMob().getLocation());
 
-                Bukkit.getScheduler().runTask(MCPets.getInstance(), () -> {
+                Bukkit.getRegionScheduler().run(MCPets.getInstance(), loc, t -> {
                     for (ItemStack item : inv.getContents()) {
                         if (item == null) continue;
                         loc.getWorld().dropItemNaturally(loc, item);

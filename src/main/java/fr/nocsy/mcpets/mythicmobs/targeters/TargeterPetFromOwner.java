@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
+
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.utils.debug.Debugger;
@@ -44,6 +47,11 @@ public class TargeterPetFromOwner extends IEntitySelector {
 
         for (Pet pet : pets) {
             if (pet.getActiveMob() == null || pet.getActiveMob().getEntity() == null) {
+                continue;
+            }
+            // Skills only act on what the caster's region owns (always true on Paper).
+            final Entity bukkitEntity = pet.getActiveMob().getEntity().getBukkitEntity();
+            if (bukkitEntity != null && !Bukkit.isOwnedByCurrentRegion(bukkitEntity)) {
                 continue;
             }
 

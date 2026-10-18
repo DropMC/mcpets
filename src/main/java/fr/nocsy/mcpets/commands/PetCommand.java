@@ -27,11 +27,14 @@ import fr.nocsy.mcpets.data.livingpets.PetStats;
 import fr.nocsy.mcpets.data.sql.PlayerData;
 import fr.nocsy.mcpets.gui.PetsMenu;
 import fr.nocsy.mcpets.listeners.PetInteractionMenuListener;
+import fr.nocsy.mcpets.utils.Tasks;
 import fr.nocsy.mcpets.utils.Utils;
 import fr.nocsy.mcpets.utils.debug.Debugger;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -86,7 +89,14 @@ public class PetCommand {
             return;
         }
 
-        pet.setDisplayName(cleaned, true, !player.hasPermission(PPermission.COLOR.getPermission()));
+        final boolean stripColor = !player.hasPermission(PPermission.COLOR.getPermission());
+        final Entity petEntity = pet.getEntityIfStillHere();
+        if (petEntity != null) {
+            // The name goes onto the entity from the pet's own thread.
+            Tasks.onEntity(petEntity, () -> pet.setDisplayName(cleaned, true, stripColor), null);
+        } else {
+            pet.setDisplayName(cleaned, true, stripColor);
+        }
         Language.NICKNAME_CHANGED_SUCCESSFULY.sendMessage(player);
     }
 
@@ -132,7 +142,11 @@ public class PetCommand {
             return;
         }
 
-        PetInteractionMenuListener.revoke(owner, pet);
+        if (Bukkit.isOwnedByCurrentRegion(owner)) {
+            PetInteractionMenuListener.revoke(owner, pet);
+        } else {
+            owner.getScheduler().run(MCPets.getInstance(), t -> PetInteractionMenuListener.revoke(owner, pet), null);
+        }
     }
 
     @Execute(name = "reload")
@@ -208,12 +222,20 @@ public class PetCommand {
 
         final Pet copy = pet.copy();
         copy.setCheckPermission(check);
-        if (silent) {
-            copy.spawn(target, target.getLocation());
-            return;
-        }
+        // The pet spawns where the target stands, so on the target's thread.
+        final Runnable spawn = () -> {
+            if (silent) {
+                copy.spawn(target, target.getLocation());
+                return;
+            }
 
-        copy.spawnWithMessage(target);
+            copy.spawnWithMessage(target);
+        };
+        if (Bukkit.isOwnedByCurrentRegion(target)) {
+            spawn.run();
+        } else {
+            target.getScheduler().run(MCPets.getInstance(), t -> spawn.run(), null);
+        }
     }
 
     @Execute(name = "reset")
@@ -252,11 +274,21 @@ public class PetCommand {
         }
 
         final ItemStack item = food.getItemStack();
-        while (left > 0) {
-            final ItemStack stack = item.clone();
-            stack.setAmount(Math.min(left, stack.getMaxStackSize()));
-            target.getInventory().addItem(stack);
-            left -= stack.getAmount();
+        final int total = left;
+        // The target's inventory belongs to the target's thread.
+        final Runnable give = () -> {
+            int remaining = total;
+            while (remaining > 0) {
+                final ItemStack stack = item.clone();
+                stack.setAmount(Math.min(remaining, stack.getMaxStackSize()));
+                target.getInventory().addItem(stack);
+                remaining -= stack.getAmount();
+            }
+        };
+        if (Bukkit.isOwnedByCurrentRegion(target)) {
+            give.run();
+        } else {
+            target.getScheduler().run(MCPets.getInstance(), t -> give.run(), null);
         }
     }
 

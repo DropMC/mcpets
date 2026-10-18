@@ -9,10 +9,12 @@ import lombok.Setter;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.Pet;
+import fr.nocsy.mcpets.utils.Tasks;
 import fr.nocsy.mcpets.utils.Utils;
 import fr.nocsy.mcpets.data.sql.PlayerData;
 import fr.nocsy.mcpets.utils.debug.Debugger;
@@ -258,29 +260,56 @@ public class PetLevel {
             permFuture = permFuture.thenCompose(v -> Utils.removePermissionAsync(player, pet.getPermission()));
         }
 
-        // Once permissions are applied, spawn the evolution on the main thread
-        permFuture.thenRun(() -> Bukkit.getScheduler().runTaskLater(MCPets.getInstance(), () -> {
-            // Make sure the owner is still here
-            final Player o = Bukkit.getPlayer(player);
-            if (o != null) {
-                final Pet activePet = Pet.fromOwner(player);
-                final Location loc = activePet != null && activePet.isStillHere() ?
-                                activePet.getActiveMob().getEntity().getBukkitEntity().getLocation() :
-                                o.getLocation();
+        // Once permissions are applied, spawn the evolution on the owner's thread
+        permFuture.thenRun(() -> {
+            final Player scheduled = Bukkit.getPlayer(player);
+            if (scheduled == null) return;
+            scheduled.getScheduler().runDelayed(MCPets.getInstance(), t -> {
+                // Make sure the owner is still here
+                final Player o = Bukkit.getPlayer(player);
+                if (o != null) {
+                    final Pet activePet = Pet.fromOwner(player);
+                    final Entity petEntity = activePet != null ? activePet.getEntityIfStillHere() : null;
+                    if (petEntity != null && !Bukkit.isOwnedByCurrentRegion(petEntity)) {
+                        // The pet ticks on another region: read where it stands and put it away there, then spawn
+                        // the evolution on that spot's region.
+                        // A pet gone meanwhile leaves the evolution to spawn at the owner, as it would have.
+                        final Runnable atOwner = () -> o.getScheduler().run(MCPets.getInstance(),
+                                t2 -> spawnEvolution(petEvolution, o.getLocation()), null);
+                        Tasks.onEntity(petEntity, () -> {
+                            if (!activePet.isStillHere()) {
+                                atOwner.run();
+                                return;
+                            }
+                            final Location loc = petEntity.getLocation();
+                            activePet.despawn(PetDespawnReason.EVOLUTION);
+                            Tasks.atLocation(loc, () -> spawnEvolution(petEvolution, loc));
+                        }, atOwner);
+                        return;
+                    }
 
-                // Despawn the previous pet
-                if (activePet != null && activePet.isStillHere()) {
-                    activePet.despawn(PetDespawnReason.EVOLUTION);
+                    final Location loc = activePet != null && activePet.isStillHere() ?
+                                    activePet.getActiveMob().getEntity().getBukkitEntity().getLocation() :
+                                    o.getLocation();
+
+                    // Despawn the previous pet
+                    if (activePet != null && activePet.isStillHere()) {
+                        activePet.despawn(PetDespawnReason.EVOLUTION);
+                    }
+
+                    spawnEvolution(petEvolution, loc);
                 }
-
-                // Spawn the evolution
-                petEvolution.spawn(loc, false);
-                // Re-enable permission checking now that LuckPerms has propagated
-                petEvolution.setCheckPermission(true);
-            }
-        }, delayBeforeEvolution));
+            }, null, Math.max(1L, delayBeforeEvolution));
+        });
 
         return true;
+    }
+
+    private static void spawnEvolution(final Pet petEvolution, final Location loc) {
+        // Spawn the evolution
+        petEvolution.spawn(loc, false);
+        // Re-enable permission checking now that LuckPerms has propagated
+        petEvolution.setCheckPermission(true);
     }
 
     /**

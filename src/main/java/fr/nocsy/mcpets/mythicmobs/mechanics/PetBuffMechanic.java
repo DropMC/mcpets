@@ -1,6 +1,5 @@
 package fr.nocsy.mcpets.mythicmobs.mechanics;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 
 import fr.nocsy.mcpets.MCPets;
@@ -65,12 +64,13 @@ public class PetBuffMechanic extends SkillMechanic implements ITargetedEntitySki
         PetFoodType buffType = PetFoodType.get(type);
         PetMath mathOperator = PetMath.get(operator);
 
-        Bukkit.getScheduler().runTask(
+        entity.getScheduler().run(
                 MCPets.getInstance(),
-                () -> {
+                t -> {
                     PetFoodBuff buff = new PetFoodBuff(pet, buffType, powerValue, mathOperator, durationValue);
                     buff.apply();
-                }
+                },
+                null
         );
 
         return SkillResult.SUCCESS;

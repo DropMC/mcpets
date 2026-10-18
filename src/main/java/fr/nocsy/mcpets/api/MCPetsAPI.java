@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import fr.nocsy.mcpets.MCPets;
 import fr.nocsy.mcpets.data.Pet;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class MCPetsAPI {
@@ -68,9 +69,15 @@ public class MCPetsAPI {
     /**
      * Set the active pet of the player
      * Returns a value giving what happened after calling the method
+     * Call it from the player's thread (on Folia, their region). From any other thread the spawn is scheduled on that
+     * thread and BLOCKED is returned, since the result is not known yet.
      */
     public static int setActivePet(final Pet pet, final Player p, final boolean checkPermission) {
         pet.setCheckPermission(checkPermission);
+        if (!Bukkit.isOwnedByCurrentRegion(p)) {
+            p.getScheduler().run(MCPets.getInstance(), t -> pet.spawn(p.getLocation(), true), null);
+            return Pet.BLOCKED;
+        }
         return pet.spawn(p.getLocation(), true);
     }
 }

@@ -338,10 +338,16 @@ public class Utils {
             return PermsUtils.givePermission(uuid, permission);
         }
 
-        if (Bukkit.getPlayer(uuid) != null) {
+        final Player player = Bukkit.getPlayer(uuid);
+        if (player != null) {
             // This is not saved in any file, just in the MCPets instance so it's not a viable solution
             // Hence we return false
-            Bukkit.getPlayer(uuid).addAttachment(MCPets.getInstance(), permission, true);
+            if (Bukkit.isOwnedByCurrentRegion(player)) {
+                player.addAttachment(MCPets.getInstance(), permission, true);
+            } else {
+                player.getScheduler().run(MCPets.getInstance(),
+                        t -> player.addAttachment(MCPets.getInstance(), permission, true), null);
+            }
             return false;
         }
         return false;

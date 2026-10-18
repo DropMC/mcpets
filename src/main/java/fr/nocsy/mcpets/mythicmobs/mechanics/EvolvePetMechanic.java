@@ -1,6 +1,5 @@
 package fr.nocsy.mcpets.mythicmobs.mechanics;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 
 import fr.nocsy.mcpets.MCPets;
@@ -49,11 +48,12 @@ public class EvolvePetMechanic extends SkillMechanic implements ITargetedEntityS
         Debugger.send("§7- evolution: §a" + evolutionId + " exists ? §a" + (evolution != null));
 
         if (evolution != null && pet != null && pet.getPetStats() != null) {
-            Bukkit.getScheduler().runTask(
+            entity.getScheduler().run(
                     MCPets.getInstance(),
-                    () -> pet.getPetStats()
+                    t -> pet.getPetStats()
                             .getCurrentLevel()
-                            .evolveTo(pet.getOwner(), forceEvolution, evolution)
+                            .evolveTo(pet.getOwner(), forceEvolution, evolution),
+                    null
             );
 
             return SkillResult.SUCCESS;
