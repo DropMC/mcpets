@@ -367,7 +367,13 @@ public class Pet {
      * Add a pet to a player's active pets list
      */
     public static void addActivePet(final UUID owner, final Pet pet) {
-        activePets.computeIfAbsent(owner, k -> new CopyOnWriteArrayList<>()).add(pet);
+        if (owner == null) return;
+        // The add happens inside compute so a concurrent removeActivePet cannot unmap the list under it.
+        activePets.compute(owner, (k, pets) -> {
+            if (pets == null) pets = new CopyOnWriteArrayList<>();
+            pets.add(pet);
+            return pets;
+        });
     }
 
     /**
