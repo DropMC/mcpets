@@ -1219,6 +1219,22 @@ public class Pet {
     }
 
     /**
+     * The pet's Bukkit entity when {@link #isStillHere()}, else null. Reads the active mob once, so a despawn on
+     * another thread cannot null it between the check and the use.
+     */
+    public Entity getEntityIfStillHere() {
+        final ActiveMob mob = activeMob;
+        if (mob == null || mob.getEntity() == null || mob.isDead() || removed) return null;
+        return mob.getEntity().getBukkitEntity();
+    }
+
+    /** The current active mob's Bukkit entity, whether or not the pet is still marked as here. */
+    private static Entity entityOf(final ActiveMob mob) {
+        if (mob == null || mob.getEntity() == null) return null;
+        return mob.getEntity().getBukkitEntity();
+    }
+
+    /**
      * Does the player have the access to the given pet ?
      */
     public boolean has(final Player p) {

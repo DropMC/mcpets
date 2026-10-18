@@ -185,7 +185,7 @@ public class PetFood {
         final UUID key = owner == null ? NULL_OWNER : owner;
         if (!waitingListApply.add(key)) return;
 
-        Bukkit.getScheduler().runTaskLater(MCPets.getInstance(), () -> waitingListApply.remove(owner), delay);
+        Bukkit.getGlobalRegionScheduler().runDelayed(MCPets.getInstance(), t -> waitingListApply.remove(key), Math.max(1L, delay));
     }
 
     private int getRemainingCooldownInSeconds(Pet pet) {

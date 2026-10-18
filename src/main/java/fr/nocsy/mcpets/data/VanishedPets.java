@@ -34,7 +34,7 @@ public class VanishedPets {
 
     /** Starts the watcher. Called once while the plugin enables. */
     public static void start(final MCPets plugin) {
-        Bukkit.getScheduler().runTaskTimer(plugin, VanishedPets::tick, PERIOD_TICKS, PERIOD_TICKS);
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, t -> tick(), PERIOD_TICKS, PERIOD_TICKS);
     }
 
     /** Records a pet taken away by vanish, so it can be summoned again afterwards. */
@@ -65,9 +65,13 @@ public class VanishedPets {
                 continue;
             }
 
-            if (Pet.isVanished(player)) continue;
+            // The vanish state and the spawn belong to the owner's region.
+            player.getScheduler().run(MCPets.getInstance(), t -> {
+                if (Pet.isVanished(player)) return;
 
-            restore(player, STASHED.remove(owner));
+                final Set<String> petIds = STASHED.remove(owner);
+                if (petIds != null) restore(player, petIds);
+            }, null);
         }
     }
 

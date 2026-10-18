@@ -4,7 +4,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import io.lumine.mythic.core.mobs.ActiveMob;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +16,7 @@ import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -37,9 +42,12 @@ public class PetStats {
 
     @Getter
     // Handles the health of the Pet
-    private double currentHealth;
-    @Getter
-    private PetTimer regenerationTimer;
+    private volatile double currentHealth;
+
+    // Regeneration runs on the pet entity's own scheduler, so it is bound to one entity and moves to the next one
+    // when the pet respawns (teleport, world change, evolution, skin).
+    private volatile ScheduledTask regenerationTask;
+    private volatile Entity regenerationEntity;
 
     @Getter
     // Handles the experience of the pet
@@ -105,8 +113,15 @@ public class PetStats {
             if (GlobalConfig.getInstance().isAutoRespawn()) {
                 Player p = Bukkit.getPlayer(pet.getOwner());
                 if (p != null && Pet.getActivePets().get(pet.getOwner()) == null) {
-                    pet.spawn(p.getLocation(), true);
-                    Debugger.send("§aPet §6" + pet.getId() + "§a was autorespawned after death.");
+                    // The timer ends on the global region; the spawn happens where the owner stands.
+                    p.getScheduler().run(MCPets.getInstance(), t -> {
+                        if (Pet.getActivePets().get(pet.getOwner()) == null) {
+                            pet.spawn(p.getLocation(), true);
+                            Debugger.send("§aPet §6" + pet.getId() + "§a was autorespawned after death.");
+                        } else {
+                            Debugger.send("§cPet §6" + pet.getId() + "§c was supposed to autorespawn, but the player already has a spawned pet with him, or is disconnected.");
+                        }
+                    }, null);
                 } else {
                     Debugger.send("§cPet §6" + pet.getId() + "§c was supposed to autorespawn, but the player already has a spawned pet with him, or is disconnected.");
                 }
@@ -135,8 +150,9 @@ public class PetStats {
      * Can not be launched multiple times
      */
     public void launchRegenerationTimer() {
-        // If the regeneration timer is already running and not null, then do not run it again
-        if (regenerationTimer != null && regenerationTimer.isRunning()) {
+        // If the regeneration timer is already running on the pet's current entity, then do not run it again
+        final Entity current = pet.getEntityIfStillHere();
+        if (regenerationTask != null && current != null && current == regenerationEntity) {
             return;
         }
 
@@ -145,16 +161,70 @@ public class PetStats {
             return;
         }
 
-        regenerationTimer = new PetTimer(Integer.MAX_VALUE, 20, null);
-        regenerationTimer.launch(() -> {
-            if (pet.isStillHere()) {
-                double value = Math.min(currentHealth + currentLevel.getRegeneration(), currentLevel.getMaxHealth());
-                pet.getActiveMob().getEntity().setHealth(value);
-                updateHealth();
-            } else {
-                regenerationTimer.stop(null);
-            }
-        });
+        bindRegeneration(current);
+    }
+
+    /**
+     * Says whether the regeneration timer is running
+     */
+    public boolean isRegenerationTimerRunning() {
+        return regenerationTask != null;
+    }
+
+    private synchronized void bindRegeneration(final Entity entity) {
+        final ScheduledTask previous = regenerationTask;
+        if (previous != null)
+            previous.cancel();
+        regenerationEntity = entity;
+
+        if (entity == null) {
+            // No entity yet: look once on the next tick, as the first run of a global timer would have.
+            regenerationTask = Bukkit.getGlobalRegionScheduler().runDelayed(MCPets.getInstance(), t -> {
+                if (regenerationTask != t) return;
+                final Entity now = pet.getEntityIfStillHere();
+                if (now != null) bindRegeneration(now);
+                else stopRegeneration(t);
+            }, 1L);
+            return;
+        }
+
+        final ScheduledTask task = entity.getScheduler().runAtFixedRate(MCPets.getInstance(),
+                t -> regenerate(t, entity), () -> regenerationRetired(entity), 1L, 20L);
+        regenerationTask = task;
+        if (task == null)
+            regenerationRetired(entity);
+    }
+
+    private void regenerate(final ScheduledTask task, final Entity bound) {
+        if (regenerationTask != task) {
+            task.cancel();
+            return;
+        }
+        final ActiveMob mob = pet.getActiveMob();
+        final Entity current = pet.getEntityIfStillHere();
+        if (current == null || mob == null) {
+            stopRegeneration(task);
+        } else if (current != bound) {
+            bindRegeneration(current);
+        } else {
+            double value = Math.min(currentHealth + currentLevel.getRegeneration(), currentLevel.getMaxHealth());
+            mob.getEntity().setHealth(value);
+            updateHealth();
+        }
+    }
+
+    private void regenerationRetired(final Entity bound) {
+        if (regenerationEntity != bound) return;
+        final Entity current = pet.getEntityIfStillHere();
+        if (current != null && current != bound) bindRegeneration(current);
+        else stopRegeneration(regenerationTask);
+    }
+
+    private synchronized void stopRegeneration(final ScheduledTask task) {
+        if (task != null && regenerationTask != task) return;
+        if (task != null) task.cancel();
+        regenerationTask = null;
+        regenerationEntity = null;
     }
 
     /**
@@ -464,15 +534,15 @@ public class PetStats {
         // Runs Async if it's a SQL, sync if not coz YAML doesn't support Async
         if (GlobalConfig.getInstance().isDatabaseSupport()) {
             // TODO: For now, we make the AutoSave only saving the connected players for MySQL users
-            Bukkit.getScheduler().runTaskTimerAsynchronously(MCPets.getInstance(), () -> {
+            Bukkit.getAsyncScheduler().runAtFixedRate(MCPets.getInstance(), t -> {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     Databases.savePlayerData(p.getUniqueId());
                 }
-            }, delay, delay);
+            }, delay * 50L, delay * 50L, TimeUnit.MILLISECONDS);
             return;
         }
 
-        Bukkit.getScheduler().runTaskTimer(MCPets.getInstance(), () ->
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(MCPets.getInstance(), t ->
                 new ArrayList<>(petStatsList).forEach(PetStats::save), delay, delay);
     }
 

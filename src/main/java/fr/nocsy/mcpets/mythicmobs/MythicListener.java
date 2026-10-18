@@ -18,7 +18,7 @@ public class MythicListener implements Listener {
 
     @EventHandler
     public void onMythicReload(MythicReloadedEvent e) {
-        Bukkit.getScheduler().runTask(MCPets.getInstance(), () -> MCPets.getComponentRegistry()
+        Bukkit.getGlobalRegionScheduler().run(MCPets.getInstance(), t -> MCPets.getComponentRegistry()
             .registerCustomComponent(CustomComponentRegistry.MythicComponentType.PLACEHOLDER, PLACEHOLDER_PACKAGE)
             .registerCustomComponent(CustomComponentRegistry.MythicComponentType.CONDITION, CONDITION_PACKAGE)
             .registerCustomComponent(CustomComponentRegistry.MythicComponentType.TARGETER, TARGETER_PACKAGE)

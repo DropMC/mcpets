@@ -70,7 +70,7 @@ public class PetFoodBuff {
 
         PetFoodBuff instance = this;
 
-        Bukkit.getScheduler().runTaskLater(MCPets.getInstance(), instance::stop, duration);
+        Bukkit.getGlobalRegionScheduler().runDelayed(MCPets.getInstance(), t -> instance.stop(), Math.max(1L, duration));
     }
 
     public void stop() {
