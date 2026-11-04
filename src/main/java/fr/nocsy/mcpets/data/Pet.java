@@ -378,7 +378,7 @@ public class Pet {
         // The add happens inside compute so a concurrent removeActivePet cannot unmap the list under it.
         activePets.compute(owner, (k, pets) -> {
             if (pets == null) pets = new CopyOnWriteArrayList<>();
-            pets.add(pet);
+            if (!pets.contains(pet)) pets.add(pet);
             return pets;
         });
     }
@@ -573,6 +573,14 @@ public class Pet {
         if (loc != null && !Bukkit.isOwnedByCurrentRegion(loc)) {
             MCPets.getLog().log(Level.SEVERE, "Pet " + id + " was asked to spawn at " + loc
                     + " from a thread that does not own that location; the spawn was refused.", new IllegalStateException());
+            return BLOCKED;
+        }
+
+        // A second spawn of an instance already out (two world changes within the delayed respawn, a respawn whose
+        // despawn lost a race) would leave its first entity behind as an untracked duplicate that never attacks.
+        // Every caller that means to replace the entity puts it away first, which clears activeMob.
+        if (isStillHere()) {
+            Debugger.send("§cPet " + id + " is already out; the second spawn was refused.");
             return BLOCKED;
         }
 
@@ -849,10 +857,7 @@ public class Pet {
         // Set the MythicMob owner with a delay so it will not conflict with ModelEngine
         final Entity mobEntity = entityOf(mob);
         if (mobEntity != null) {
-            mobEntity.getScheduler().runDelayed(MCPets.getInstance(), t -> {
-                final ActiveMob current = activeMob;
-                if (current != null) current.setOwnerUUID(owner);
-            }, null, 1L);
+            mobEntity.getScheduler().runDelayed(MCPets.getInstance(), t -> mob.setOwnerUUID(owner), null, 1L);
         }
 
         // Follow up the owner ?
