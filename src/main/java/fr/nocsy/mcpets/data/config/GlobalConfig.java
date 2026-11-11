@@ -69,6 +69,8 @@ public class GlobalConfig extends AbstractConfig {
     @Getter
     private int experienceBarSize;
     @Getter
+    private double experiencePerKill;
+    @Getter
     private String experienceSymbol;
     @Getter
     private String experienceColorDone;
@@ -206,6 +208,8 @@ public class GlobalConfig extends AbstractConfig {
             getConfig().set("AutoRespawn", false);
         if (getConfig().get("Experience.BarSize") == null)
             getConfig().set("Experience.BarSize", 40);
+        if (getConfig().get("Experience.PerKill") == null)
+            getConfig().set("Experience.PerKill", 3);
         if (getConfig().get("Experience.Symbol") == null)
             getConfig().set("Experience.Symbol", "|");
         if (getConfig().get("Experience.ColorDone") == null)
@@ -322,6 +326,7 @@ public class GlobalConfig extends AbstractConfig {
         autoSave = getConfig().getInt("AutoSaveDelay");
 
         experienceBarSize = getConfig().getInt("Experience.BarSize");
+        experiencePerKill = getConfig().getDouble("Experience.PerKill", 3);
         experienceSymbol = getConfig().getString("Experience.Symbol");
         experienceColorDone = getConfig().getString("Experience.ColorDone");
         experienceColorLeft = getConfig().getString("Experience.ColorLeft");
