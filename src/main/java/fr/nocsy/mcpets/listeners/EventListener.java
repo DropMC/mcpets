@@ -23,6 +23,7 @@ public class EventListener implements Listener {
         listeners.add(new PetSkinsMenuListener());
         listeners.add(new VanillaDismountListener());
         listeners.add(new MountWallClipListener());
+        listeners.add(new PetBuildObstructionListener());
 
         listeners.add(new LivingPetsListener());
         listeners.add(new PetPveListener());
