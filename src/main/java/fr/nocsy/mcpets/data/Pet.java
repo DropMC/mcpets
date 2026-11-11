@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import net.kyori.adventure.text.Component;
+import gg.dropmc.survival.core.config.LevelConfig;
+import gg.dropmc.survival.core.feature.experience.api.ExperienceAPI;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -1588,7 +1590,7 @@ public class Pet {
                             .replace("%pet_id%", id)
                             .replace("%pet_name%", icon.getItemMeta().getDisplayName()));
 
-                    petEntity.customName(customName);
+                    petEntity.customName(withLevel(customName));
 
                     petEntity.getScheduler().runDelayed(MCPets.getInstance(),
                             t -> setNameTag(currentName, false), null, 10L);
@@ -1602,7 +1604,7 @@ public class Pet {
                     return;
                 }
 
-                petEntity.customName(Utils.toComponent(currentName));
+                petEntity.customName(withLevel(Utils.toComponent(currentName)));
 
                 petEntity.getScheduler().runDelayed(MCPets.getInstance(),
                         t -> setNameTag(currentName, true), null, 10L);
@@ -1620,6 +1622,35 @@ public class Pet {
         } catch (final Exception ex) {
             MCPets.getLog().log(Level.SEVERE, "Exception raised while naming the pet | setDisplayName(" + Language.TAG_TO_REMOVE_NAME.getMessage() + ") for the pet " + this.id, ex);
         }
+    }
+
+    /**
+     * Re-applies the current name, so the level beside it follows a level up. Nothing is saved: the
+     * level is never part of the name the player chose.
+     */
+    public void refreshLevelName() {
+        if (currentName != null) setDisplayName(currentName, false);
+    }
+
+    /**
+     * The name shown over the pet, with a level line above it drawn like the player's own
+     * ({@code Nível: <level><icon>}, coloured and badged by the bands of core's {@code level.yml}).
+     * Only a pet that levels up carries one: the companion pets have a single level and their
+     * name stays as it was.
+     */
+    private Component withLevel(final Component name) {
+        final PetStats stats = petStats;
+        if (stats == null || stats.getCurrentLevel() == null || petLevels == null || petLevels.size() < 2) return name;
+
+        final int level = petLevels.indexOf(stats.getCurrentLevel()) + 1;
+        if (level < 1) return name;
+
+        final LevelConfig.LevelEntry band = ExperienceAPI.isInitialized() ? ExperienceAPI.getLevelEntry(level) : null;
+        final Component number = band == null
+                ? Component.text(level)
+                : Component.text(level).color(band.color()).append(band.icon());
+
+        return Component.text("Nível: ").append(number).appendNewline().append(name);
     }
 
     /**

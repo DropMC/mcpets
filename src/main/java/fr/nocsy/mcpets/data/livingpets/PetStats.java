@@ -408,7 +408,10 @@ public class PetStats {
         }
 
         // If a level up happened, make sure to save it and update the actual pet
-        if (levelUp) updateChangingData();
+        if (levelUp) {
+            updateChangingData();
+            pet.refreshLevelName();
+        }
 
         // If there is no next level, set the experience so that it's the plateau value
         if (getNextLevel().equals(currentLevel) && experience > currentLevel.getExpThreshold()) {

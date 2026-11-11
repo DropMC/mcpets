@@ -64,10 +64,40 @@ final class PetIcons {
         } else {
             block.add(label("Experiência: ",
                     (int) stats.getExperience() + "/" + (int) next.getExpThreshold()));
+            block.addAll(nextLevelGains(stats.getCurrentLevel(), next));
         }
 
         block.add(Component.empty());
         return block;
+    }
+
+    /**
+     * What the next level improves, one line per stat that actually changes. Power is what the pets' skill
+     * files scale the ability's damage and recharge with, so it is named by what the player feels.
+     */
+    static List<Component> nextLevelGains(final PetLevel current, final PetLevel next) {
+        final List<Component> lines = new ArrayList<>();
+        addGain(lines, "Vida máxima", current.getMaxHealth(), next.getMaxHealth());
+        addGain(lines, "Poder (dano e recarga)", current.getFlatPower(), next.getFlatPower());
+        addGain(lines, "Regeneração", current.getRegeneration(), next.getRegeneration());
+        if (lines.isEmpty()) return lines;
+
+        lines.addFirst(Component.text("No nível " + next.getLevelName() + ":", NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        return lines;
+    }
+
+    private static void addGain(final List<Component> lines, final String stat, final double from, final double to) {
+        if (from == to) return;
+        lines.add(Component.text(" " + stat + ": ", NamedTextColor.GRAY)
+                .append(Component.text(number(from) + " → ", NamedTextColor.WHITE))
+                .append(Component.text(number(to), NamedTextColor.GREEN))
+                .decoration(TextDecoration.ITALIC, false));
+    }
+
+    /** A stat without the trailing ".0" a whole number would otherwise carry. */
+    private static String number(final double value) {
+        return value == Math.rint(value) ? Long.toString((long) value) : Double.toString(value);
     }
 
     static Component label(final String label, final String value) {
